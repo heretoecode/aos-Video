@@ -322,7 +322,7 @@ public abstract class ManualScrappingSearchFragment extends SafeSearchSupportFra
                 if (isCancelled) return;
                 final ScrapeSearchResult finalResult = result;
                 handler.post(() -> {
-                    if (isDetached() || !isAdded()) return;
+                    if (isCancelled || mSearchTask != this || isDetached() || !isAdded()) return;
                     mSearchResults = (finalResult != null) ? finalResult.results : null;
                     updateRow();
                 });
@@ -372,7 +372,7 @@ public abstract class ManualScrappingSearchFragment extends SafeSearchSupportFra
                             else
                                 mResultsAdapter.add(details.mPosition, details.mDetails);
                              */
-                            if (details.mDetails != null && details.mDetails.getDefaultPoster() != null) {
+                            if (details.mDetails != null) {
                                 mResultsAdapter.add(mResultsAdapter.size(), details.mDetails);
                             }
                         });

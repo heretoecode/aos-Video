@@ -88,7 +88,7 @@ public class ManualShowScrappingSearchFragment extends ManualScrappingSearchFrag
         // Allow often the second or third suggestion is the right one
         setSearchQuery(mShowName, true);
 
-        setTitle(getString(R.string.leanback_scrap_searching_tvshow_hint));
+        setTitle("TV show title, TMDb ID or IMDb ID / link");
     }
 
     @Override
@@ -114,6 +114,15 @@ public class ManualShowScrappingSearchFragment extends ManualScrappingSearchFrag
     @Override
     protected ScrapeSearchResult performSearch(String text) {
         mTagsToSearchResultMap.clear();
+        try {
+            ScrapeSearchResult direct = com.archos.mediacenter.video.utils.DirectShowLookup.find(requireContext().getApplicationContext(), text);
+            if (direct != null) return direct;
+        } catch (Exception error) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (isAdded()) Toast.makeText(requireContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+            });
+            return new ScrapeSearchResult(new ArrayList<>(), false, com.archos.mediascraper.ScrapeStatus.ERROR, error);
+        }
         mSearchInfo.setUserInput(text+ " S1E1");
         // search for param + " S1E1" so we get show results only, filename is ignored but has to be != null
         return mScraper.getAllMatches(mSearchInfo);
@@ -146,7 +155,7 @@ public class ManualShowScrappingSearchFragment extends ManualScrappingSearchFrag
 
         if (tags == null) {
             // 2015: I didn't test this case...
-            buildNewShowTags(result.getTitle());
+            tags = buildNewShowTags(result.getTitle());
         }
 
         if (log.isDebugEnabled()) log.debug("put in mTagsToSearchResultMap: {}", tags);

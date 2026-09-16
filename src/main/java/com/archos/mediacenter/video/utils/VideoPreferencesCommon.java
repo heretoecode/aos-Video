@@ -312,6 +312,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     private Preference mExportManualPreference;
     private Preference mDbExportManualPreference = null;
 
+    private com.archos.mediacenter.video.streaming.StreamingPreferences mStreamingPreferences;
     private PreferenceFragmentCompat mPreferencesFragment;
 
     List<String> OpensubtitlesLanguageListEntries = new ArrayList<>();
@@ -329,8 +330,29 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     private final ActivityResultLauncher<Intent> mFolderPickerLauncher;
     private final ActivityResultLauncher<Intent> mTraktAuthLauncher;
 
+    private final ActivityResultLauncher<String> backupDestination;
+    private final ActivityResultLauncher<String[]> backupSource;
+
     public VideoPreferencesCommon(PreferenceFragmentCompat preferencesFragment) {
         mPreferencesFragment = preferencesFragment;
+        backupDestination = preferencesFragment.registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
+            if (uri == null) return;
+            Intent intent = new Intent(MediaLibraryBackupService.ACTION_EXPORT, null, getActivity(), MediaLibraryBackupService.class);
+            intent.putExtra(MediaLibraryBackupService.EXTRA_EXPORT_URI, uri.toString());
+            getContext().startService(intent);
+        });
+        backupSource = preferencesFragment.registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri == null) return;
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                .setTitle("Restore NOVA backup")
+                .setMessage("Replace the library and restore saved settings? A recovery backup will be kept first.")
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Restore", (dialog, which) -> {
+                    Intent intent = new Intent(MediaLibraryBackupService.ACTION_IMPORT, null, getActivity(), MediaLibraryBackupService.class);
+                    intent.putExtra(MediaLibraryBackupService.EXTRA_IMPORT_FILE, uri.toString());
+                    getContext().startService(intent);
+                }).show();
+        });
         mFolderPickerLauncher = preferencesFragment.registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onFolderPickerResult);
@@ -665,6 +687,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         resetPassthroughPref(mSharedPreferences);
 
         addPreferencesFromResource(R.xml.preferences_video);
+        mStreamingPreferences = new com.archos.mediacenter.video.streaming.StreamingPreferences(mPreferencesFragment);
 
         TorrentPathDialogPreference torrentPref =
                 (TorrentPathDialogPreference) findPreference(KEY_TORRENT_PATH);
@@ -849,7 +872,20 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         }
         mAboutPreferences = (PreferenceCategory) findPreference(KEY_ABOUT_PREFERENCES);
         Preference novaVersion = (Preference) findPreference("preferences_version");
-        novaVersion.setTitle(mSharedPreferences.getString("nova_version", "@string/APP_INFO"));
+        novaVersion.setTitle("Build");
+        novaVersion.setSummary(R.string.mark_build_identity);
+        novaVersion.setOnPreferenceClickListener(preference -> {
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.mark_release_notes_title)
+                    .setMessage("Version: " + com.archos.mediacenter.video.BuildConfig.VERSION_NAME
+                        + "\nEdition: Mark’s Edition 3 · 14 September 2026"
+                        + "\nPackage: " + getActivity().getPackageName()
+                        + "\nBase NOVA: 6.4.63"
+                        + "\nSource: https://github.com/heretoecode/aos-Video\n\n"
+                        + getString(R.string.mark_release_notes))
+                    .setPositiveButton(android.R.string.ok, null).show();
+            return true;
+        });
 
         mSmb2 = (CheckBoxPreference) findPreference(KEY_SMB2);
         mSmbResolver = (CheckBoxPreference) findPreference(KEY_SMB_RESOLV);
@@ -979,19 +1015,18 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
 
         Preference exportLibraryPreference = findPreference(getString(R.string.media_library_export_prefkey));
         exportLibraryPreference.setOnPreferenceClickListener(preference -> {
-            if (LoaderUtils.getScrapeInProgress()) {
-                //Stop the scrape.
-                LoaderUtils.setScrapeInProgress(false);
+            try { backupDestination.launch("nova-backup-" + new java.text.SimpleDateFormat("yyyy-MM-dd-HHmm", java.util.Locale.ROOT).format(new java.util.Date()) + ".zip"); }
+            catch (android.content.ActivityNotFoundException missing) {
+                new androidx.appcompat.app.AlertDialog.Builder(getActivity()).setMessage("Install a document picker to choose a backup location. You can still export to NOVA's folder.")
+                    .setPositiveButton("Export here", (d,w) -> getContext().startService(new Intent(MediaLibraryBackupService.ACTION_EXPORT, null, getActivity(), MediaLibraryBackupService.class)))
+                    .setNegativeButton(android.R.string.cancel,null).show();
             }
-            Toast.makeText(getActivity(), R.string.media_library_export_in_progress, Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(MediaLibraryBackupService.ACTION_EXPORT, null, getActivity(), MediaLibraryBackupService.class);           
-            getContext().startService(intent);
             return true;
         });
-
         Preference importLibraryPreference = findPreference(getString(R.string.media_library_import_prefkey));
         importLibraryPreference.setOnPreferenceClickListener(preference -> {
-            showImportDialog();
+            try { backupSource.launch(new String[]{"application/zip", "application/octet-stream"}); }
+            catch (android.content.ActivityNotFoundException missing) { showImportDialog(); }
             return true;
         });
 
@@ -1630,6 +1665,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     }
 
     public void onDestroy() {
+        if (mStreamingPreferences != null) mStreamingPreferences.close();
         if (mSharedPreferences != null)
             mSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         if (mOsPreferences != null && mOsPrefsListener != null)

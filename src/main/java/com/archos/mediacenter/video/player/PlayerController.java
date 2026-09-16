@@ -662,7 +662,7 @@ public class PlayerController implements View.OnTouchListener, OnGenericMotionLi
         mControllerView.setOnTouchListener(this);
         mControllerView.setOnGenericMotionListener(this);
         // twice for sidebyside and topbottom view
-        mControllerViewLeft= inflater.inflate(R.layout.player_controller_inside, null);
+        mControllerViewLeft= inflater.inflate(experimentalUi() ? R.layout.player_controller_experimental : R.layout.player_controller_inside, null);
         if (mControllerViewLeft != null) {
             mOsdLeftTextView = mControllerViewLeft.findViewById(R.id.osd_left);
             mOsdRightTextView = mControllerViewLeft.findViewById(R.id.osd_right);
@@ -737,6 +737,16 @@ public class PlayerController implements View.OnTouchListener, OnGenericMotionLi
         if (log.isDebugEnabled()) log.debug("CONFIG attachWindow, mPlayerView.addView");
 
         initMenuAdapter(mControllerViewLeft);
+        if (experimentalUi()) {
+            TextView title = mControllerViewLeft.findViewById(R.id.preview_playback_title);
+            if (title != null && mVideoTitle != null) title.setText(mVideoTitle.getText());
+            View more = mControllerViewLeft.findViewById(R.id.preview_more);
+            if (more != null) more.setOnClickListener(v -> {
+                if (!mTVMenuAdapter.isCreated() && mContext instanceof PlayerActivity)
+                    ((PlayerActivity)mContext).createPlayerTVMenu();
+                showTVMenu(true);
+            });
+        }
         switchMode(TVUtils.isTV(mContext));
         setUIMode(UIMode);
 
@@ -1114,7 +1124,7 @@ public class PlayerController implements View.OnTouchListener, OnGenericMotionLi
 
                         if (mLastRelativePosition == -1) {
                             do {
-                                mNextSeek += SEEK_ACCEL_MSECS[step] * mSeekDir;
+                                mNextSeek += (experimentalUi() && step == 0 ? 10000 : SEEK_ACCEL_MSECS[step]) * mSeekDir;
                             }
                             while ((mSeekDir > 0) ? (mNextSeek <= Player.sPlayer.getCurrentPosition()) : (mNextSeek >= Player.sPlayer.getCurrentPosition()));
 
@@ -1463,6 +1473,10 @@ public class PlayerController implements View.OnTouchListener, OnGenericMotionLi
     public void setVideoTitle(String title) {
         if (mVideoTitle != null && title != null && !title.isEmpty()) {
             mVideoTitle.setText(title);
+            if (mControllerViewLeft != null) {
+                TextView hudTitle = mControllerViewLeft.findViewById(R.id.preview_playback_title);
+                if (hudTitle != null) hudTitle.setText(title);
+            }
         }
     }
 
@@ -1560,6 +1574,10 @@ public class PlayerController implements View.OnTouchListener, OnGenericMotionLi
         }
     }
 
+    private boolean experimentalUi() {
+        return TVUtils.isTV(mContext) && PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("try_new_ui", false);
+    }
+
     private void setNextSeekPos(int way) {
         if (log.isDebugEnabled()) log.debug("setNextSeekPos {}", way);
         mSeekDir = way;
@@ -1568,7 +1586,7 @@ public class PlayerController implements View.OnTouchListener, OnGenericMotionLi
                 mNextSeek = Player.sPlayer.getCurrentPosition();
             }
             do {
-                mNextSeek += way * SEEK_SHORT_MSEC;
+                mNextSeek += way * (experimentalUi() ? 10000 : SEEK_SHORT_MSEC);
             } while ((mSeekDir>0)?(mNextSeek <= Player.sPlayer.getCurrentPosition()):(mNextSeek >= Player.sPlayer.getCurrentPosition()));
 
             } else {

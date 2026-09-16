@@ -50,6 +50,7 @@ public class Clock {
     final Context mContext;
     final private TextView mClockTextView;
     final private SimpleDateFormat mDateFormat;
+    private boolean mReceiverRegistered;
 
     public Clock(Context context, View overlayContainer) {
         mContext = context;
@@ -69,18 +70,25 @@ public class Clock {
     }
 
     public void destroy() {
+        pause();
     }
 
     public void resume() {
         if (log.isDebugEnabled()) log.debug("resume");
-        mContext.registerReceiver(mReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+        if (!mReceiverRegistered) {
+            mContext.registerReceiver(mReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+            mReceiverRegistered = true;
+        }
         updateClock();
     }
 
     public void pause() {
         if (log.isDebugEnabled()) log.debug("pause");
         // We do not change the visibility of the clock here to have a smooth transition between fragments with clock
-        mContext.unregisterReceiver(mReceiver);
+        if (mReceiverRegistered) {
+            mContext.unregisterReceiver(mReceiver);
+            mReceiverRegistered = false;
+        }
     }
 
     final BroadcastReceiver mReceiver = new BroadcastReceiver() {

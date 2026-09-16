@@ -85,9 +85,22 @@ public class ScannerAndScraperProgress {
         mRepeatHandler.post(mRepeatRunnable);
     }
 
+    private boolean floating;
+    public void useFloatingStyle() {
+        floating=true;
+        int pad=Math.round(10*mContext.getResources().getDisplayMetrics().density);
+        android.graphics.drawable.GradientDrawable background=new android.graphics.drawable.GradientDrawable();
+        background.setColor(0xd9102638);background.setCornerRadius(pad);background.setStroke(1,0x554b738f);
+        mProgressGroup.setBackground(background);mProgressGroup.setPadding(pad,pad/2,pad,pad/2);
+        mBadge.setTypeface(null,android.graphics.Typeface.NORMAL);mBadge.setTextSize(12);
+        mBadge.setMaxWidth(pad*36);mBadge.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        android.view.ViewGroup.LayoutParams wheel=mProgressWheel.getLayoutParams();wheel.width=wheel.height=pad*2;mProgressWheel.setLayoutParams(wheel);
+        mProgressWheel.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(0xff85c9f5));
+    }
+
     public void destroy() {
         if (log.isDebugEnabled()) log.debug("destroy");
-        // all things that need to be stopped are stopped in pause() already
+        mRepeatHandler.removeCallbacks(mRepeatRunnable);
     }
 
     public void resume() {
@@ -95,6 +108,7 @@ public class ScannerAndScraperProgress {
         mGeneralVisibility = View.VISIBLE;
         updateCount();
         updateVisibility();
+        mRepeatHandler.removeCallbacks(mRepeatRunnable);
         mRepeatHandler.post(mRepeatRunnable);
     }
 
@@ -176,13 +190,20 @@ public class ScannerAndScraperProgress {
             textColor = mDefaultTextColor;
         }
 
+        if(floating&&!badge.isEmpty()) {
+            if(NetworkScannerReceiver.isScannerWorking())badge=NetworkScannerServiceVideo.isDeleting()?"Updating network library…":"Scanning "+com.archos.mediacenter.video.utils.PreviewScanReceiver.currentSource()+"…";
+            else if(ImportState.VIDEO.isInitialImport()||ImportState.VIDEO.isRegularImport())badge=ImportState.VIDEO.isDeleting()?"Updating local library…":"Scanning local library…";
+            else if(AutoScrapeService.isNfoExportInProgress())badge="Exporting metadata…";
+            else badge="Identifying library titles…";
+            textColor=0xffdceaf5;
+        }
         if (!badge.isEmpty()) {
             mBadge.setTextColor(textColor);
             mBadge.setText(badge);
             mBadge.setVisibility(View.VISIBLE);
             mCount.setTextColor(textColor);
             mCount.setText(String.valueOf(count));
-            mCount.setVisibility(View.VISIBLE);
+            mCount.setVisibility(floating?View.GONE:View.VISIBLE);
         } else {
             mBadge.setVisibility(View.GONE);
             mCount.setVisibility(View.INVISIBLE);

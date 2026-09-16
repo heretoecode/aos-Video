@@ -29,6 +29,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import com.archos.mediacenter.video.streaming.StreamingActions;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.preference.PreferenceManager;
@@ -237,6 +238,7 @@ public class TvshowFragment extends DetailsFragmentWithLessTopOffset implements 
         mOverviewRowPresenter.setOnActionClickedListener(new OnActionClickedListener() {
             @Override
             public void onActionClicked(Action action) {
+                if (StreamingActions.onClick(action)) return;
                 if (action.getId() == TvshowActionAdapter.ACTION_PLAY) {
                     playEpisode();
                 }
@@ -386,6 +388,7 @@ public class TvshowFragment extends DetailsFragmentWithLessTopOffset implements 
 
     @Override
     public void onDestroyView() {
+        if (mDetailsOverviewRow != null) StreamingActions.cancel(mDetailsOverviewRow.getActionsAdapter());
         if (DBG) Log.d(TAG, "onDestroyView");
         clearSeasonAdapters();
         mOverlay.destroy();
@@ -410,6 +413,7 @@ public class TvshowFragment extends DetailsFragmentWithLessTopOffset implements 
     public void onResume() {
         if (DBG) Log.d(TAG, "onResume");
         super.onResume();
+        if (mDetailsOverviewRow != null) StreamingActions.refresh(mDetailsOverviewRow.getActionsAdapter());
         mOverlay.resume();
         mBackdropController.restoreIfNeeded();
         // Start loading the detailed info about the show if needed
@@ -847,9 +851,9 @@ public class TvshowFragment extends DetailsFragmentWithLessTopOffset implements 
             if (bitmap!=null) {
                 Palette palette = Palette.from(bitmap).generate();
                 if (palette.getDarkVibrantSwatch() != null)
-                    mColor = palette.getDarkVibrantSwatch().getRgb();
+                    mColor = ThemeManager.getInstance(getActivity()).isSlateTheme() ? ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor() : palette.getDarkVibrantSwatch().getRgb();
                 else if (palette.getDarkMutedSwatch() != null)
-                    mColor = palette.getDarkMutedSwatch().getRgb();
+                    mColor = ThemeManager.getInstance(getActivity()).isSlateTheme() ? ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor() : palette.getDarkMutedSwatch().getRgb();
                 else
                     mColor = ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor();
                 dominantColor = mColor;

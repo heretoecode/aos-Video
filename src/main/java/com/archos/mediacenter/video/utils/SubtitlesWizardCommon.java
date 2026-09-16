@@ -98,6 +98,21 @@ public class SubtitlesWizardCommon {
         mWizardActivity.sendBroadcast(arg0);
     }
 
+    public void prepare() {
+        Uri uri = getIntent().getData();
+        mVideoUri = uri;
+        mVideoPath = uri == null ? null : uri.toString();
+        mCurrentFiles = new ArrayList<>();
+        mAvailableFiles = new ArrayList<>();
+    }
+
+    /** Call on a worker after prepare() on the UI thread. */
+    public void loadFiles() {
+        if (mVideoPath == null) return;
+        mCurrentFilesCount = buildCurrentSubtitlesFilesList(mVideoPath);
+        mAvailableFilesCount = buildAvailableSubtitlesFilesList(mVideoPath);
+    }
+
     public void onCreate() {
         // Extract the path of the video to handle from the intent
         Uri videoUri = getIntent().getData();
@@ -107,9 +122,7 @@ public class SubtitlesWizardCommon {
             if (log.isDebugEnabled()) log.debug("onCreate : video to process = {}", mVideoPath);
 
             if (mVideoPath != null) {
-                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
-                StrictMode.setThreadPolicy(policy);
 
                 // Retrieve the list of subtitles files already associated with the video
                 mCurrentFilesCount = buildCurrentSubtitlesFilesList(mVideoPath);

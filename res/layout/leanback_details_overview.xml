@@ -70,6 +70,12 @@
                 android:paddingEnd="@dimen/lb_details_v2_description_margin_end"
                 android:horizontalSpacing="@dimen/lb_details_overview_action_items_spacing"
                 lb:rowHeight="@dimen/lb_details_v2_actions_height" />
+            <TextView android:id="@+id/streaming_footer"
+                android:layout_width="match_parent" android:layout_height="28dp"
+                android:gravity="center_vertical" android:paddingStart="24dp"
+                android:paddingEnd="24dp" android:textSize="11sp"
+                android:textColor="#FFD5E1EE" android:focusable="false"
+                android:visibility="gone"/>
         </LinearLayout>
     </RelativeLayout>
     </FrameLayout>

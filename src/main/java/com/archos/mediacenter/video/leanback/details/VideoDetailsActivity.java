@@ -66,6 +66,14 @@ public class VideoDetailsActivity extends LeanbackActivity {
         }
 
         setContentView(R.layout.androidtv_details_activity);
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                Fragment fragment=getSupportFragmentManager().findFragmentById(R.id.main_browse_fragment);
+                if(fragment instanceof VideoDetailsFragment&&((VideoDetailsFragment)fragment).closePreviewNativeDetails())return;
+                setEnabled(false);
+                try{getOnBackPressedDispatcher().onBackPressed();}finally{setEnabled(true);}
+            }
+        });
 
         android.widget.ImageView backdropView = findViewById(R.id.details_backdrop);
         if (backdropView != null) {

@@ -99,6 +99,10 @@ public class VideoSettingsFragment extends LeanbackSettingsFragmentCompat {
             if (getListView() != null) {
                 getListView().setBackgroundColor(ThemeManager.getInstance(requireContext()).getLeanbackBackgroundColor());
             }
+            if (requireActivity().getIntent().getBooleanExtra("show_streaming_settings", false)) {
+                scrollToPreference("streaming_category");
+                requireActivity().getIntent().removeExtra("show_streaming_settings");
+            }
             // Note: Header color is now handled by the theme (MyLeanbackTheme.Preferences.Black)
         }
 

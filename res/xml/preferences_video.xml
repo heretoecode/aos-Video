@@ -5,12 +5,8 @@
         android:key="preferences_about"
         android:title="@string/preferences_about"
         app:iconSpaceReserved="false">
-        <Preference
-            android:title="@string/APP_INFO"
-            android:selectable="false"
-            android:key="preferences_version"
-            app:iconSpaceReserved="false"/>
-
+        <Preference android:key="preferences_version" android:title="Build"
+            android:selectable="true" app:iconSpaceReserved="false"/>
         <ListPreference
             android:dialogTitle="@string/ui_language_title"
             android:entries="@array/entries_list_preference"
@@ -21,6 +17,7 @@
             android:title="@string/UiLang_title"
             app:iconSpaceReserved="false"/>
     </PreferenceCategory>
+    <PreferenceCategory android:key="streaming_category" android:title="@string/streaming_title" app:iconSpaceReserved="false"/>
     <PreferenceCategory
         android:key="preferences_category_video"
         android:title="@string/preferences_category_video"
@@ -296,7 +293,7 @@
             app:iconSpaceReserved="false"/>
 
         <ListPreference
-            android:defaultValue="blue"
+            android:defaultValue="slate"
             android:dialogTitle="@string/theme_selection_title"
             android:entries="@array/theme_selection_entries"
             android:entryValues="@array/theme_selection_entryvalues"
@@ -364,6 +361,10 @@
             android:title="@string/preferences_movie_sort_order_title"
         app:iconSpaceReserved="false"/>
 
+        <SwitchPreferenceCompat android:key="try_new_ui" android:defaultValue="false"
+            android:title="Try new UI" android:summary="Use top navigation. Turn off to restore the classic sidebar." app:iconSpaceReserved="false"/>
+        <CheckBoxPreference android:key="show_documentaries" android:defaultValue="true"
+            android:title="Show documentaries" android:summary="Show Documentaries in the TV shows row" app:iconSpaceReserved="false"/>
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="show_all_tv_shows_row"

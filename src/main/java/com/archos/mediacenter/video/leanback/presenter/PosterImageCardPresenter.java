@@ -125,7 +125,7 @@ public class PosterImageCardPresenter extends Presenter {
          * @param imageUri
          */
         protected void updateCardView(Uri imageUri, long videoId, boolean isLarge) {
-            if(!(mImageCardViewTarget.getLastUri()!=null&&mImageCardViewTarget.getLastUri().equals(imageUri) && mImageCardViewTarget.isLastStateError())) {
+            if (imageUri != null) {
 
                 mImageCardViewTarget.setLastUri(imageUri);
                 int width = getWidth(mContext, isLarge);

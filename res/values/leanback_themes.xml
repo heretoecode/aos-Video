@@ -16,6 +16,8 @@
 <resources>
 
     <style name="MyLeanbackTheme" parent="Theme.Leanback">
+        <item name="android:textColorPrimary">#FFFFFFFF</item>
+        <item name="android:textColorSecondary">#FFD5E1EE</item>
         <item name="android:windowBackground">@color/leanback_background</item>
         <item name="android:windowEnterTransition">@android:transition/fade</item>
         <item name="android:windowExitTransition">@android:transition/fade</item>
@@ -32,6 +34,8 @@
 
     <!-- Black theme variant for leanback -->
     <style name="MyLeanbackTheme.Black" parent="Theme.Leanback">
+        <item name="android:textColorPrimary">#FFFFFFFF</item>
+        <item name="android:textColorSecondary">#FFD5E1EE</item>
         <item name="android:windowBackground">@color/leanback_background_black</item>
         <item name="android:windowEnterTransition">@android:transition/fade</item>
         <item name="android:windowExitTransition">@android:transition/fade</item>
@@ -73,6 +77,8 @@
     </style>
 
     <style name="MyLeanbackTheme.Preferences" parent="Theme.Leanback">
+        <item name="android:textColorPrimary">#FFFFFFFF</item>
+        <item name="android:textColorSecondary">#FFD5E1EE</item>
         <item name="preferenceTheme">@style/MyLeanbackPreferenceTheme</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -101,5 +107,30 @@
         <item name="colorPrimary">@color/theme_primary_black</item>
         <!-- required for preferenceFragment title background not to be gray -->
         <item name="android:colorPrimary">@color/theme_primary_black</item>
+    </style>
+    <style name="MyLeanbackTheme.Preferences.Slate" parent="MyLeanbackTheme.Preferences">
+        <item name="preferenceTheme">@style/MyLeanbackPreferenceTheme.Slate</item>
+        <item name="alertDialogTheme">@style/Theme.AlertDialog.Slate</item>
+    </style>
+    <style name="MyLeanbackPreferenceTheme.Slate" parent="PreferenceThemeOverlayLeanback">
+        <item name="android:textColorPrimary">#FFFFFFFF</item>
+        <item name="android:textColorSecondary">#FFD5E1EE</item>
+        <item name="android:windowBackground">@color/theme_background_slate</item>
+        <item name="colorPrimary">@color/theme_header_slate</item>
+        <item name="android:colorPrimary">@color/theme_header_slate</item>
+        <item name="colorAccent">@color/theme_accent_slate</item>
+    </style>
+    <style name="Theme.AlertDialog.Slate" parent="Theme.AlertDialog">
+        <item name="android:windowBackground">@color/theme_details_primary_slate</item>
+        <item name="colorAccent">@color/theme_accent_slate</item>
+    </style>
+    <style name="NovaPreviewHomeOverlay">
+        <item name="browseRowsMarginTop">40dp</item>
+        <item name="browseRowsMarginStart">32dp</item>
+        <item name="android:windowBackground">@color/theme_background_slate</item>
+        <item name="android:colorBackground">@color/theme_background_slate</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="colorPrimary">@color/theme_grid_item_slate</item>
+        <item name="colorAccent">#8FCEFF</item>
     </style>
 </resources>

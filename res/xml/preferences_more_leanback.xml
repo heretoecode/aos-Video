@@ -17,9 +17,5 @@
             android:key="show_by_rating"
             android:title="Show movies/tv shows by rating"/>
 
-    <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="show_documentaries"
-            android:title="Show documentaries"
-            android:summary="Show a documentaries category when documentary TV shows are in your library"/>
+
 </PreferenceScreen>

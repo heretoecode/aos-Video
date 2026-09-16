@@ -1,0 +1,39 @@
+<resources>
+    <string name="preview_playback_options">Playback options</string>
+    <string name="preview_continue_watching">Continue watching</string>
+    <string name="preview_episode">S%1$d · E%2$d</string>
+
+    <string name="theme_slate">Slate blue</string>
+    <string name="documentary_tv_shows">Documentary TV shows</string>
+    <string name="mark_build_identity">Mark’s personal NOVA build · Edition 3.5\n6.4.63-mark.3.5-preview · heretoecode/aos-Video</string>
+    <string name="mark_release_notes_title">Build details and release notes</string>
+    <string name="mark_release_notes">Edition 3.5 · Startup repair\n\n• Fixed clock cleanup when switching UI modes.\n• Added startup, recreation and installed-APK checks.\n\nIncluded library-page features:\n• Centred navigation with Search beside Settings.\n• Clock aligned in header; indexing moved to footer.\n• Larger Recently played cards first on Home.\n• Recently added groups existing and new episodes by show, choosing resume or next unwatched.\n• Matching Movies and TV show pages with Continue watching, poster grids, sorting and genre/year filters.\n• Compact grouped Network and files cards.\n• Settings and classic UI preserved.\n\nStreaming remains paused. HDR badges require verified media information and are not inferred.\nFull notes: docs/MARK-EDITION-3.md</string>
+    <string name="streaming_title">Streaming services</string>
+    <string name="streaming_enabled_title">Show streaming options</string>
+    <string name="streaming_enabled_summary">Find subscription and free streaming options for titles in your library</string>
+    <string name="streaming_country">Country</string>
+    <string name="streaming_providers">My providers</string>
+    <string name="streaming_preferred">Preferred provider</string>
+    <string name="streaming_automatic">Automatic — first available</string>
+    <string name="streaming_select_providers">Choose your country and providers in Settings</string>
+    <string name="streaming_refresh">Refresh provider list</string>
+    <string name="streaming_loading">Checking availability…</string>
+    <string name="streaming_attribution">Streaming availability by JustWatch via TMDb. Subscription, free and ad-supported offers only. Provider catalogues and individual season availability can change.</string>
+    <string name="streaming_ready">Provider list updated. Choose the services you use above.</string>
+    <string name="streaming_no_country_providers">No provider list is available for this country.</string>
+    <string name="streaming_settings_error">Could not refresh providers. Check your connection and select this row to retry. Saved choices are kept.</string>
+    <string name="streaming_play_local">Play local file</string>
+    <string name="streaming_play_provider">Play on %1$s</string>
+    <string name="streaming_open_provider">Open %1$s</string>
+    <string name="streaming_more">More providers</string>
+    <string name="streaming_alternatives">%1$d other services · JustWatch</string>
+    <string name="streaming_no_offers">No selected providers available in %1$s · JustWatch</string>
+    <string name="streaming_needs_metadata">Identify this title first to find streaming options</string>
+    <string name="streaming_retry">Retry streaming lookup</string>
+    <string name="streaming_lookup_error">Could not check availability. Local playback is still available.</string>
+    <string name="streaming_open_fallback">A direct title link could not be opened on this device. Open the provider app and search for “%1$s”, or view its watch page.</string>
+    <string name="streaming_open_app">Open app</string>
+    <string name="streaming_watch_page">View watch page</string>
+    <string name="streaming_app_missing">The provider app could not be opened. Install it or use the watch page.</string>
+    <string name="streaming_browser_missing">No app or browser can open this link on your device.</string>
+</resources>

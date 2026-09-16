@@ -138,6 +138,8 @@ public class MainActivityLeanback extends LeanbackActivity {
                     return;
                 }
 
+                MainFragment browse = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.main_browse_fragment);
+                if (browse != null && browse.focusTopNavigation()) return;
                 setEnabled(false);
                 getOnBackPressedDispatcher().onBackPressed();
                 setEnabled(true);

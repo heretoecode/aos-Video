@@ -113,6 +113,9 @@ public class VideoViewClickedListener implements OnItemViewClickedListener {
         } else if (itemViewHolder instanceof ListPresenter.ListViewHolder){
             sourceView = ((ListPresenter.ListViewHolder)itemViewHolder).getImageView();
         }
+        if (itemViewHolder.view instanceof com.archos.mediacenter.video.leanback.presenter.PreviewCardPresenter.Card) {
+            sourceView = ((com.archos.mediacenter.video.leanback.presenter.PreviewCardPresenter.Card)itemViewHolder.view).image;
+        }
         if (sourceView instanceof ImageView) {
             Drawable drawable = ((ImageView) sourceView).getDrawable();
             VideoDetailsTransitionPosterCache.put(launchUptimeMs, drawable);
@@ -132,7 +135,11 @@ public class VideoViewClickedListener implements OnItemViewClickedListener {
                 VideoDetailsTransitionBackdropCache.put(launchUptimeMs, backdropView.getDrawable(), backdropFile);
             }
         }
-        if (animate) {
+        // Cinematic Preview has no native poster transition target. Never start an
+        // unmatched shared-element transition (including the return transition).
+        boolean cinematic = video instanceof com.archos.mediacenter.video.browser.adapters.object.Movie
+                && androidx.preference.PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("try_new_ui", false);
+        if (animate && sourceView != null && !cinematic) {
             traceVideoDetailsLaunch(launchUptimeMs, "source-transition-options-start");
             ActivityOptionsCompat opts = ActivityOptionsCompat.makeSceneTransitionAnimation(
                     activity, sourceView, VideoDetailsActivity.SHARED_ELEMENT_NAME);

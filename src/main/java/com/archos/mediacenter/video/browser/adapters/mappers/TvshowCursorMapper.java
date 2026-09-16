@@ -80,7 +80,7 @@ public class TvshowCursorMapper implements CompatibleCursorMapper {
                 cursor.getString(mPlotColumn),
                 cursor.getString(mStudioColumn),
                 cursor.getString(mActorsColumn),
-                cursor.getInt(mYearColumn),
+                premiereYear(cursor.isNull(mYearColumn) ? 0L : cursor.getLong(mYearColumn)),
                 cursor.getFloat(mRatingColumn),
                 cursor.getString(mContentRatingColumn),
                 mPinnedColumn != -1 ? cursor.getLong(mPinnedColumn) : -1,
@@ -88,6 +88,16 @@ public class TvshowCursorMapper implements CompatibleCursorMapper {
         );
     }
 
+
+    /** ShowTags persists Date.getTime(), not a year or a 32-bit integer. */
+    public static int premiereYear(long millis) {
+        if (millis == 0) return 0; // missing-date sentinel used by the scraper
+        java.util.Calendar date = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
+        date.setTimeInMillis(millis);
+        int year = date.get(java.util.Calendar.YEAR);
+        int latest = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) + 5;
+        return year >= 1800 && year <= latest ? year : 0;
+    }
 
     private Uri getPosterUri(Cursor c) {
         String path = c.getString(mPosterPathColumn);
