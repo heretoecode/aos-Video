@@ -250,6 +250,7 @@ public class NetworkShortcutDetailsFragment extends DetailsSupportFragment imple
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mOverlay = new Overlay(this);
+        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false)){view.setAlpha(0f);view.post(()->{if(!isAdded())return;DetailsOverviewRow row=(DetailsOverviewRow)getAdapter().get(0);java.util.List<Action> actions=new java.util.ArrayList<>();java.util.List<String> labels=new java.util.ArrayList<>();for(int i=0;i<row.getActionsAdapter().size();i++){Action a=(Action)row.getActionsAdapter().get(i);actions.add(a);labels.add(String.valueOf(a.getLabel1()));}android.app.Dialog dialog=com.archos.mediacenter.video.leanback.PreviewDialog.choose(requireContext(),mShortcut.getName(),labels.toArray(new String[0]),0,n->onActionClicked(actions.get(n)));dialog.setOnCancelListener(d->{if(isAdded())requireActivity().finish();});});}
     }
 
     @Override
@@ -299,6 +300,7 @@ public class NetworkShortcutDetailsFragment extends DetailsSupportFragment imple
                 LoaderUtils.setScrapeInProgress(false);
             }
             NetworkScanner.scanVideos(getActivity(), mShortcut.getUri());
+            com.archos.mediacenter.video.leanback.PreviewNotice.show(getActivity(),"Folder scan requested",false);
             slightlyDelayedFinish();
         }
         else if (action.getId() == ACTION_ADD_INDEX) { // can be indexed or shortcut

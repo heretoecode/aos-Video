@@ -66,6 +66,7 @@ public class TVMenuAdapter {
             ((TVCardView)cards.get(0).findViewById(R.id.card_view)).requestFocus();
     }
 
+    public java.util.List<TVCardView> previewCards(){java.util.List<TVCardView> result=new java.util.ArrayList<>();for(View root:cards){TVCardView card=root.findViewById(R.id.card_view);if(card!=null&&card.getVisibility()==View.VISIBLE)result.add(card);}return result;}
     public TVMenu createTVMenu(){
         TVMenu tvm = (TVMenu)LayoutInflater.from(mActivity)
                 .inflate(R.layout.menu_layout, null);
@@ -106,8 +107,11 @@ public class TVMenuAdapter {
 
     public View createView(Drawable on, Drawable off, String text){
         View v = (View)LayoutInflater.from(mActivity)
-                .inflate(R.layout.card_layout, null);
-        ((TVCardView)v.findViewById(R.id.card_view)).setText(text);
+                .inflate(androidx.preference.PreferenceManager.getDefaultSharedPreferences(mActivity).getBoolean("try_new_ui", false) ? R.layout.card_layout_experimental : R.layout.card_layout, null);
+        if (androidx.preference.PreferenceManager.getDefaultSharedPreferences(mActivity).getBoolean("try_new_ui", false)) {
+            v.findViewById(R.id.card_view).setBackgroundResource(R.drawable.mark_hud_focus);
+        }
+        ((TVCardView)v.findViewById(R.id.card_view)).setText(text);v.findViewById(R.id.card_view).setTag(text);
         ((TVCardView)v.findViewById(R.id.card_view)).setOffDrawable(off);
         ((TVCardView)v.findViewById(R.id.card_view)).setOnDrawable(on);
 

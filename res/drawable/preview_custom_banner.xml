@@ -1,0 +1,1 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:drawable="@drawable/nova_banner"/><item android:drawable="@drawable/preview_custom_banner_ribbon"/></layer-list>

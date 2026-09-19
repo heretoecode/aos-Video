@@ -184,6 +184,14 @@ public class Video extends Base implements Serializable {
      * @return
      */
 
+    private String mPreviewBackdrop;
+    public void setPreviewBackdrop(String uri) { mPreviewBackdrop = uri; }
+    public Uri getPreviewBackdrop() { return mPreviewBackdrop == null ? null : Uri.parse(mPreviewBackdrop); }
+
+    public boolean hasMeasured4K() { return mCalculatedWidth >= 3840 || mCalculatedHeight >= 2160; }
+    public int getMeasuredWidth() { return mCalculatedWidth; }
+    public int getMeasuredHeight() { return mCalculatedHeight; }
+
     public int getNormalizedDefinition(){
         int w = mCalculatedWidth;
         int h = mCalculatedHeight;

@@ -66,7 +66,7 @@ public class TVCardView extends FrameLayout implements Checkable, FocusableTVCar
     private Context mContext;
     private AttributeSet attrs;
     private int defStyle;
-    private final int minAlpha = 122;
+    private int minAlpha = 122;
     private onFocusOutListener ofol;
     private View parentView;
     public interface onFocusOutListener{
@@ -98,6 +98,7 @@ public class TVCardView extends FrameLayout implements Checkable, FocusableTVCar
     }
 
     private void init() {
+        if (androidx.preference.PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("try_new_ui", false)) minAlpha = 230;
         this.isChecked = false;
         this.others = new ArrayList<View>();
         this.lastFocused = 0;
@@ -109,6 +110,10 @@ public class TVCardView extends FrameLayout implements Checkable, FocusableTVCar
     }
     //dimensions for animations
 
+    private int expandedHeightLimit() {
+        return androidx.preference.PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("try_new_ui", false)
+            ? (int)(getResources().getDisplayMetrics().heightPixels * .8f) : originalHeight * 2;
+    }
     public TVCardView getSlaveView(){return slaveView;}
     public int getCurrentWidth() {
         android.view.ViewGroup.LayoutParams lp = getLayoutParams();
@@ -203,6 +208,9 @@ public class TVCardView extends FrameLayout implements Checkable, FocusableTVCar
 
     }
 
+    public String previewTitle(){return getTag() instanceof String?(String)getTag():text;}
+    public TVMenu previewMenu(){for(View v:others)if(v instanceof TVMenu&&((TVMenu)v).getChildCount()>0)return (TVMenu)v;return null;}
+    public void previewClick(){if(ocl!=null)ocl.onClick(this);}
     public void setOnSwitchClickListener(OnClickListener ocl) {
         if (findViewById(R.id.imageView) != null)
             findViewById(R.id.imageView).setOnClickListener(ocl);
@@ -431,7 +439,7 @@ public class TVCardView extends FrameLayout implements Checkable, FocusableTVCar
                     v.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
                     totalHeight = v.getMeasuredHeight();
                 }
-                new_cardview_height=(int) ((totalHeight+originalHeight*coeff_image_view>originalHeight*2)?originalHeight*2:totalHeight+originalHeight*coeff_image_view);
+                new_cardview_height=(int) ((totalHeight+originalHeight*coeff_image_view>expandedHeightLimit())?expandedHeightLimit():totalHeight+originalHeight*coeff_image_view);
 		//we need new height to be smaller than screen size*
                 DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
                 
@@ -590,7 +598,7 @@ public class TVCardView extends FrameLayout implements Checkable, FocusableTVCar
     public View createSlaveView() {
         // TODO Auto-generated method stub
         
-        View v = (View)LayoutInflater.from(mContext).inflate(R.layout.card_layout, null);
+        View v = (View)LayoutInflater.from(mContext).inflate(androidx.preference.PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("try_new_ui", false) ? R.layout.card_layout_experimental : R.layout.card_layout, null);
         TVCardView tvcv =(TVCardView) v.findViewById(R.id.card_view);
         tvcv.setParentView(v);
         setSlaveView(tvcv);

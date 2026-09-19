@@ -1,0 +1,1 @@
+<resources><style name="PreviewLaunch" parent="MyLeanbackTheme.Launcher"><item name="android:windowBackground">#09111A</item><item name="android:windowAnimationStyle">@null</item></style><style name="PreviewEntry" parent="ArchosThemeLauncher"><item name="android:windowBackground">#09111A</item><item name="android:windowAnimationStyle">@null</item></style></resources>

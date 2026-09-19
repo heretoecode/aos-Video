@@ -108,7 +108,7 @@ public class OpenSubtitlesApiHelper {
         if (log.isDebugEnabled()) log.debug("OpenSubtitlesApiHelper: USER_AGENT_VALUE = {}", USER_AGENT_VALUE);
         if (log.isTraceEnabled()) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
             httpClient = new OkHttpClient.Builder()
                     .addInterceptor(logging)
                     .build();
@@ -215,7 +215,6 @@ public class OpenSubtitlesApiHelper {
                         invalidToken();
                         return false;
                     }
-                    if (log.isDebugEnabled()) log.debug("login: token = {}", authToken);
                     // Check if "base_url" is present in the response
                     setBaseUrl(jsonResponse.optString("https://"+"base_url", API_BASE_URL));
                     // Check if "user" object is present in the response

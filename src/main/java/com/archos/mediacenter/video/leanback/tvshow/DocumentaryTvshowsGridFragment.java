@@ -10,6 +10,7 @@ import androidx.loader.content.Loader;
 import com.archos.mediacenter.video.R;
 import com.archos.mediacenter.video.browser.loader.DocumentaryTvshowsLoader;
 import com.archos.mediacenter.video.browser.loader.VideoLoader;
+import com.archos.mediacenter.video.tvshow.TvshowSortOrderEntries;
 import com.archos.mediaprovider.video.VideoStore;
 
 /** Leanback grid for TV shows identified as documentaries by NOVA's existing metadata. */

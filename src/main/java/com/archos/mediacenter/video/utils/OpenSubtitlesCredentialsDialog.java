@@ -103,6 +103,7 @@ public class OpenSubtitlesCredentialsDialog extends DialogFragment {
                         Toast.makeText(getActivity(), getString(R.string.dialog_subloader_credentials_empty), Toast.LENGTH_SHORT).show();
                 });
         mDialog = builder.create();
+        mDialog.setOnShowListener(ignored -> com.archos.mediacenter.video.leanback.PreviewDialog.styleNative(mDialog));
         return mDialog;
     }
 

@@ -258,6 +258,12 @@ public abstract class ListingFragment extends MyVerticalGridFragment implements 
             updateGridOrList();
         }
 
+        if(mPrefs.getBoolean("try_new_ui",false)){
+            v.setBackground(com.archos.mediacenter.video.leanback.PreviewAccent.utility(requireContext()));
+            getTitleView().setBackgroundColor(android.graphics.Color.TRANSPARENT);View titleText=getTitleView().findViewById(androidx.leanback.R.id.title_text);if(titleText instanceof TextView){TextView title=(TextView)titleText;title.setTextSize(19);title.setTextColor(0xffc7d8e4);title.setSingleLine(true);title.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);}
+            if(mUri!=null){String path=mUri.getPath();setTitle((mUri.getHost()==null?"Files":mUri.getHost())+(path==null?"":"  ›  "+path.replace("/","  ›  ")));}
+            if(mErrorMessage!=null)mErrorMessage.setTextColor(0xffb4cbe0);if(mErrorDetails!=null)mErrorDetails.setTextColor(0xff9db1c4);
+        }
         return v;
     }
 
@@ -307,6 +313,7 @@ public abstract class ListingFragment extends MyVerticalGridFragment implements 
                     dialog.dismiss();
                 })
                 .create().show());
+        if(mPrefs.getBoolean("try_new_ui",false))getTitleView().setOnOrb4ClickedListener(v->{String[] labels=new String[mSortOrderEntries.length];for(int i=0;i<labels.length;i++)labels[i]=mSortOrderEntries[i].toString();com.archos.mediacenter.video.leanback.PreviewDialog.choose(requireContext(),getString(R.string.sort_mode),labels,mSortOrderItem,which->{if(mSortOrderItem!=which){mSortOrderItem=which;mSortOrder=itemid2sortorder(which);mPrefs.edit().putString(SORT_PARAM_KEY,mSortOrder).apply();initGridOrList();startListing(mUri);}});});
     }
 
     @Override
@@ -466,6 +473,7 @@ public abstract class ListingFragment extends MyVerticalGridFragment implements 
     }
 
     private static DisplayMode readDisplayModePref(SharedPreferences prefs) {
+        if(prefs.getBoolean("try_new_ui",false))return DisplayMode.LIST;
         int displayModeIndex = prefs.getInt(PREF_LISTING_DISPLAY_MODE, -1);
         if (displayModeIndex<0) {
             return DisplayMode.GRID; // default
@@ -853,6 +861,7 @@ public abstract class ListingFragment extends MyVerticalGridFragment implements 
         if(!bgMngr.isAttached())
             bgMngr.attach(getActivity().getWindow());
 
+        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false)&&!PrivateMode.isActive()){bgMngr.setDrawable(com.archos.mediacenter.video.leanback.PreviewAccent.utility(requireContext()));return;}
         if (PrivateMode.isActive()) {
             int privateModeColor = ThemeManager.getInstance(getActivity()).getPrivateModeColor();
             bgMngr.setColor(privateModeColor);

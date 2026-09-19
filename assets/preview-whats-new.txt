@@ -1,0 +1,13 @@
+SUPERNOVA Preview 4.1.1
+
+Corrective pass over Preview 4.1. Existing library, playback progress, Home rows and preview update identity are preserved.
+
+Home: composed SUPERNOVA startup surface, stable Featured action sizing, restrained transitions and genuine official title logos where available. Playback uses cached logos only.
+Rows and Details: compact Customise Home, confirmed Clear Watch Next, clearer Information/Actions, secondary Add to Row and improved information layout.
+Library and sources: restrained list separators, compact Scan Library, dark file-browser rows and transparent Network/Search navigation. Automatic scan controls are exposed; absent settings initialise to startup enabled/15 minutes, explicit Off is preserved. WebDAV automatic eligibility is corrected without rewriting the importer.
+Search and Streaming: accent-insensitive indexed search, including Shogun/Shōgun; provider selections persist immediately and update in place. Genuine provider artwork/availability uses the existing backend only.
+Playback: concise track labels, centred transport controls, compact anchored option panels and restrained focus. TV clock says Episode ends. Up Next visuals are refined while its working timing and episode progression are retained.
+Backup: verified in-progress publication, portable saved configuration/accounts and recovery of downloadable artwork. Export contains private credentials; Android storage grants must be renewed on another device.
+
+NOT TESTED — USER QA REQUIRED: physical Shield upgrade, populated startup/logo transitions, automatic WebDAV, actual Ireland offers/handoff, playback/remote behaviour and real backup/new-device restore.
+No invented service availability, playback functionality or deferred 4.2 features.

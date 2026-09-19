@@ -1,0 +1,1 @@
+<CheckBox xmlns:android="http://schemas.android.com/apk/res/android" android:id="@android:id/checkbox" android:layout_width="32dp" android:layout_height="24dp" android:button="@drawable/preview_preference_toggle" android:background="@null" android:focusable="false" android:clickable="false"/>

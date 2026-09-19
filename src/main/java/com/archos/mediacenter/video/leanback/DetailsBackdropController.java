@@ -95,7 +95,9 @@ public final class DetailsBackdropController {
     /** Cancels work when stopped and remembers the current input for a genuine restore. */
     public void onStop(boolean restoreNeeded, Object restoreInput) {
         if (mTask != null || mCurrentlyDisplayedFile != null) {
-            cancelCurrent();
+            // Keep the composed backdrop while playback covers this still-live Details screen.
+            // cancel() clears the ImageView and caused a blank/rebind flash on returning.
+            if(mTask!=null){if(mTask.getLoadedFile()!=null)mCurrentlyDisplayedFile=mTask.getLoadedFile();mTask.cancelTaskOnly();mTask=null;}
             mNeedsRestore = restoreNeeded;
             mRestoreInput = restoreInput;
         }

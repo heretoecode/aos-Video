@@ -81,6 +81,10 @@ public class TVMenuItem extends LinearLayout implements Checkable, TVSlaveView{
     }
     public void setFocus(boolean hasFocus){
         if (log.isDebugEnabled()) log.debug("setFocus hasFocus:{}", hasFocus);
+        if (androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("try_new_ui",false)) {
+            setBackground(com.archos.mediacenter.video.leanback.PreviewDialog.focus(getContext()));
+            return;
+        }
         if(hasFocus){
      
             this.setBackgroundResource(R.color.video_info_next_prev_button_focused);
@@ -131,6 +135,7 @@ public class TVMenuItem extends LinearLayout implements Checkable, TVSlaveView{
             slaveView.setText(text);
     }
     public String getText() { return text;}
+    public void previewClick(){if(!isDisabled&&ocl!=null)ocl.onClick(this);}
 
     // send key events to TVMenu in order to skip disabled items and separators in menu navigation
     @Override

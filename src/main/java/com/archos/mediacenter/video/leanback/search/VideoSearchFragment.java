@@ -148,6 +148,9 @@ public class VideoSearchFragment extends SafeSearchSupportFragment implements Se
 
     @Override
     public void onDestroyView() {
+        mHandler.removeCallbacksAndMessages(null);
+        if (mCurrentSearchTask != null) mCurrentSearchTask.cancel();
+        clearSearchRows();
         // Unregister theme change listener
         if (mThemeChangeListener != null) {
             ThemeManager.getInstance(getActivity()).unregisterThemeChangeListener(mThemeChangeListener);
@@ -173,7 +176,24 @@ public class VideoSearchFragment extends SafeSearchSupportFragment implements Se
         return true;
     }
 
+    private void clearSearchRows() {
+        if (mRowsAdapter == null) return;
+        for (int i = 0; i < mRowsAdapter.size(); i++) {
+            Object row = mRowsAdapter.get(i);
+            if (row instanceof ListRow && ((ListRow) row).getAdapter() instanceof CursorObjectAdapter)
+                ((CursorObjectAdapter) ((ListRow) row).getAdapter()).changeCursor(null);
+        }
+        mRowsAdapter.clear();
+    }
+
     private void loadQuery(String query, boolean valid) {
+        if (!valid) {
+            mLastQuery = query;
+            mHandler.removeCallbacksAndMessages(null);
+            if (mCurrentSearchTask != null) mCurrentSearchTask.cancel();
+            clearSearchRows();
+            return;
+        }
         if (!query.equals(mLastQuery)) {
             mLastQuery = query;
 
@@ -202,7 +222,7 @@ public class VideoSearchFragment extends SafeSearchSupportFragment implements Se
         }
 
         void execute() {
-            mRowsAdapter.clear();
+            clearSearchRows();
             executor.execute(() -> {
                 ListRow listRow = null;
                 Cursor cursorToRelease = null;
@@ -236,7 +256,7 @@ public class VideoSearchFragment extends SafeSearchSupportFragment implements Se
                 final ListRow finalRow = listRow;
                 final Cursor finalCursor = cursorToRelease;
                 handler.post(() -> {
-                    if (!isCancelled && finalRow != null) {
+                    if (!isCancelled && mCurrentSearchTask == this && isAdded() && getView() != null && finalRow != null) {
                         mRowsAdapter.add(finalRow);
                     } else if (finalCursor != null) {
                         finalCursor.close();

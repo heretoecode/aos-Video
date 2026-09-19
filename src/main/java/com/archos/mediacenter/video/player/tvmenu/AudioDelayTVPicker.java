@@ -119,6 +119,10 @@ public class AudioDelayTVPicker extends AudioDelayPickerAbstract implements TVSl
     }
 
     public void setFocus(boolean hasFocus) {
+        if (androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("try_new_ui", false)) {
+            setBackground(com.archos.mediacenter.video.leanback.PreviewDialog.focus(getContext()));
+            return;
+        }
         if (log.isDebugEnabled()) log.debug("setFocus: {}", hasFocus);
         if (hasFocus) {
             this.setBackgroundResource(R.color.video_info_next_prev_button_focused);

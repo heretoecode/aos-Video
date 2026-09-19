@@ -73,6 +73,13 @@ public abstract class ListPresenter extends Presenter {
             mWatchedIcon.setVisibility(View.GONE);
             mPinnedIcon.setVisibility(View.GONE);
 
+            if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(context).getBoolean("try_new_ui",false)){
+                float density=context.getResources().getDisplayMetrics().density;
+                View content=mBaseCardView.findViewById(R.id.myroot);content.getLayoutParams().width=Math.min((int)(820*density),context.getResources().getDisplayMetrics().widthPixels-(int)(100*density));content.getLayoutParams().height=(int)(54*density);content.setBackgroundColor(0x240a1420);
+                mImageView.getLayoutParams().width=(int)(82*density);mImageView.getLayoutParams().height=(int)(54*density);mImageView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                mTitleTv.setTextSize(14);mTitleTv.setSingleLine(true);mTitleTv.setTypeface(android.graphics.Typeface.create("sans-serif-medium",android.graphics.Typeface.NORMAL));mContentTv.setTextSize(11);mContentTv.setTextColor(0xffa4b6c7);mBaseCardView.setBackgroundColor(0xbb192f45);
+                android.graphics.drawable.LayerDrawable separated=new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{new android.graphics.drawable.ColorDrawable(0x1809131c),new android.graphics.drawable.ColorDrawable(0x40708695)});separated.setLayerHeight(1,Math.max(1,(int)density));separated.setLayerGravity(1,android.view.Gravity.BOTTOM);mBaseCardView.setBackground(separated);mBaseCardView.setForeground(com.archos.mediacenter.video.leanback.PreviewDialog.focus(context));mBaseCardView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+            }
             mImageViewTarget = new PicassoImageViewTarget(mImageView);
         }
 

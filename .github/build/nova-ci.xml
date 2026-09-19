@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote name="github" fetch="https://github.com/nova-video-player" />
+
+  <remote name="heretoecode" fetch="https://github.com/heretoecode" />
+
+  <default revision="master" remote="github" />
+
+  <project path="AVP" name="aos-AVP" revision="9c5842b74ab180c99441ed23fdd5d508448388a7" >
+    <copyfile src="Makefile" dest="Makefile" />
+  </project>
+
+  <project path="Video" name="aos-Video" revision="0651a3e0b60ada996a9774ab527d7c1ef34b7503" />
+  <project path="MediaLib" name="aos-MediaLib" revision="5758074049bc153ac4967b4ecd21886469270076" remote="heretoecode" />
+  <project path="FileCoreLibrary" name="aos-FileCoreLibrary" revision="c4b760c55102c72d45f68b0d16999fc1f4f013a7" />
+
+  <project path="native/avos" name="aos-avos" revision="2cf21c486c7bf244c49b78d2220197a6d75396dd" />
+  <project path="native/audiocompress" name="aos-audiocompress" revision="3a3f9324d2550bd305060e1c52b803121ea09aad" />
+  <project path="native/ffmpeg-android-builder" name="ffmpeg-android-builder-nobin" revision="49b63bcec9125f96b327d055bfc49875c07f3ce4" />
+  <project path="native/dav1d-android-builder" name="dav1d-android-builder-nobin" revision="d6c1a350295aaf4458e698f681503e7b6a051d1a" />
+  <project path="native/opus-android-builder" name="opus-android-builder-nobin" revision="72b91b1fa45fc036406e9a96d4d78bf5ce698a2c" />
+  <project path="native/libmysofa-android-builder" name="libmysofa-android-builder" revision="dc97741d01fa3cee8c81312b24bb4414c3f85d5c" />
+  <project path="native/openssl-android-builder" name="openssl-android-builder-nobin" revision="524a99ffdf139844d5817ec2fe94dc63a4277087" />
+  <project path="native/libyuv" name="aos-libyuv" revision="650963473a2568eb81218f6e2703d3efaad6300e" />
+  <project path="native/libnativehelper" name="aos-libnativehelper" revision="ab46fb536b594b25f93611ad7ef0f27b8fc24edb" />
+  <project path="native/boost" name="aos-boost-android-builder" revision="43daa8621f4b74239d8fd52a545fe3344f0ff43c" />
+  <project path="native/libtorrent-android-builder" name="aos-libtorrent-android-builder" revision="f30c887f14eb61f7fe1dc1a7208610eebd251f59" />
+  <project path="native/torrentd" name="torrentd-nobin" revision="49bd6a6aeb783fae0089e04e2e84c50112acb5c3" />
+  <project path="native/prebuilt/ffmpeg" name="prebuilt-ffmpeg" revision="6ba0e9340cf725bede2e2f29d30c290a2ab8130e"/>
+  <project path="native/prebuilt/opus" name="prebuilt-opus" revision="27544063be93ee55c6ba58a2ebb32c106eb2e37b"/>
+  <project path="native/prebuilt/dav1d" name="prebuilt-dav1d" revision="f89559d62f671881431146b94c4364e568a623c8"/>
+  <project path="native/prebuilt/openssl" name="prebuilt-openssl" revision="78631105380190806182d77943b5524e81609f65"/>
+  <project path="native/prebuilt/libmysofa" name="prebuilt-libmysofa" revision="adf0d8278382a631d67dc3764d62d6ceece3789b"/>
+  <project path="native/prebuilt/torrentd" name="prebuilt-torrentd" revision="4a516e32c5e57fa1305540e7b622ba5e39080abe"/>
+</manifest>

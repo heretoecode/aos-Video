@@ -15,6 +15,7 @@
 package com.archos.mediacenter.video.leanback.tvshow;
 
 import android.content.Context;
+import com.archos.mediacenter.video.streaming.StreamingActions;
 import androidx.leanback.widget.Action;
 import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.SparseArrayObjectAdapter;
@@ -31,12 +32,12 @@ import java.util.ArrayList;
 public class TvshowActionAdapter extends SparseArrayObjectAdapter {
 
     public static final int ACTION_PLAY = 0;
-    public static final int ACTION_MORE_DETAILS = 1;
-    public static final int ACTION_MARK_SHOW_AS_WATCHED = 2;
-    public static final int ACTION_MARK_SHOW_AS_NOT_WATCHED = 3;
-    public static final int ACTION_UNINDEX = 4;
-    public static final int ACTION_CHANGE_INFO = 5;
-    public static final int ACTION_DELETE = 6;
+    public static final int ACTION_MORE_DETAILS = 3;
+    public static final int ACTION_MARK_SHOW_AS_WATCHED = 4;
+    public static final int ACTION_MARK_SHOW_AS_NOT_WATCHED = 5;
+    public static final int ACTION_UNINDEX = 6;
+    public static final int ACTION_CHANGE_INFO = 7;
+    public static final int ACTION_DELETE = 8;
 
     final Context mContext;
 
@@ -46,7 +47,7 @@ public class TvshowActionAdapter extends SparseArrayObjectAdapter {
      */
     public TvshowActionAdapter(Context context, Tvshow tvshow) {
         mContext = context;
-        set(ACTION_PLAY, new Action(ACTION_PLAY, context.getString(R.string.play_selection)));
+        set(ACTION_PLAY, new Action(ACTION_PLAY, context.getString(R.string.streaming_play_local)));
         set(ACTION_MORE_DETAILS, new Action(ACTION_MORE_DETAILS, context.getString(R.string.leanback_action_more_details)));
         if (tvshow.isWatched()) {
             clear(ACTION_MARK_SHOW_AS_WATCHED);
@@ -62,6 +63,7 @@ public class TvshowActionAdapter extends SparseArrayObjectAdapter {
     }
 
     public void update(Tvshow tvshow) {
+        StreamingActions.bind(this, mContext, tvshow, false, 1);
         if (tvshow.isWatched()) {
             clear(ACTION_MARK_SHOW_AS_WATCHED);
             set(ACTION_MARK_SHOW_AS_NOT_WATCHED, new Action(ACTION_MARK_SHOW_AS_WATCHED, mContext.getString(R.string.mark_as_not_watched)));

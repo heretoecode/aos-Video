@@ -60,6 +60,7 @@ public class DbUtils {
             return;
         }
 
+        com.archos.mediacenter.video.leanback.PreviewSeriesJourney.explicitlyWatched(context,video);
         final boolean traktSync = Trakt.isTraktV2Enabled(context, prefs);
 
         final ContentValues values = new ContentValues();

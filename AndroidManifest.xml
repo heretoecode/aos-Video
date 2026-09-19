@@ -51,6 +51,7 @@
 
     <!-- Used for scanning and trakt -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" android:minSdkVersion="34"/>
 
     <!--<uses-permission android:name="android.permission.WRITE_SETTINGS" />-->
@@ -86,6 +87,16 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <queries>
+        <package android:name="com.netflix.ninja"/>
+        <package android:name="com.netflix.mediaclient"/>
+        <package android:name="com.amazon.amazonvideo.livingroom"/>
+        <package android:name="com.amazon.avod.thirdpartyclient"/>
+        <package android:name="com.disney.disneyplus"/>
+        <package android:name="com.apple.atve.androidtv.appletv"/>
+        <package android:name="com.cbs.ca"/>
+        <package android:name="com.cbs.ott"/>
+        <package android:name="com.bskyb.nowtv.beta"/>
+
         <intent>
             <action
                 android:name="android.speech.RecognitionService" />
@@ -101,8 +112,8 @@
         android:name=".CustomApplication"
         android:allowTaskReparenting="true"
         android:hardwareAccelerated="true"
-        android:icon="@mipmap/ic_launcher"
-        android:banner="@drawable/nova_banner"
+        android:icon="${novaIcon}"
+        android:banner="${novaBanner}"
         android:label="@string/nova"
         android:largeHeap="true"
         android:requestLegacyExternalStorage="true"
@@ -128,7 +139,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:taskAffinity="archos.task.video"
-            android:theme="@style/ArchosThemeLauncher" />
+            android:theme="${novaEntryTheme}" />
 
         <activity
             android:name=".browser.MainActivity"
@@ -1190,12 +1201,13 @@
             <!-- android:foregroundServiceType="dataSync"/>-->
         <service android:name="com.archos.mediacenter.video.browser.FileManagerService"/>
             <!-- android:foregroundServiceType="dataSync"/>-->
-        <service android:name="com.archos.mediacenter.video.utils.MediaLibraryBackupService"/>
+        <service android:name="com.archos.mediacenter.video.utils.MediaLibraryBackupService" android:exported="false" android:foregroundServiceType="dataSync"/>
             <!-- android:foregroundServiceType="dataSync"/>-->
 
         <receiver
             android:name="com.archos.mediacenter.LibAvosReceiver"
-            android:exported="true">
+            android:exported="false"
+            android:enabled="false">
             <intent-filter>
                 <action android:name="com.archos.mediacenter.NEW_PLUGINS" />
             </intent-filter>
@@ -1239,7 +1251,7 @@
         <provider
             android:name="com.archos.mediaprovider.video.VideoProvider"
             android:authorities="com.archos.media.videocommunity;com.archos.media.scrapercommunity"
-            android:exported="true" />
+            android:exported="false" />
         <!-- BroadcastReceiver to trigger database import -->
         <receiver
             android:name="com.archos.mediaprovider.video.VideoStoreImportReceiver"
@@ -1469,7 +1481,7 @@
 
         <!-- keeps track of network scanning state -->
         <receiver
-            android:name="com.archos.mediaprovider.video.NetworkScannerReceiver"
+            android:name="com.archos.mediacenter.video.utils.PreviewScanReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="archos.media.intent.action.VIDEO_SCANNER_SCAN_STARTED" />
@@ -1543,7 +1555,7 @@
             android:launchMode="singleTask"
             android:label="@string/nova"
             android:taskAffinity="archos.task.video"
-            android:theme="@style/MyLeanbackTheme.Launcher">
+            android:theme="${novaLaunchTheme}">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />

@@ -74,7 +74,9 @@ public class Overlay {
             throw new IllegalStateException("Overlay is not compatible with this fragment: "+fragment);
         }
 
-        ViewGroup parentView = (ViewGroup)fragmentView.findViewById(parentViewId);
+        ViewGroup parentView = fragmentView instanceof com.archos.mediacenter.video.leanback.TopNavigation
+            ? ((com.archos.mediacenter.video.leanback.TopNavigation)fragmentView).getStatusContainer()
+            : (ViewGroup)fragmentView.findViewById(parentViewId);
         if (parentView==null) {
             throw new IllegalStateException("parentView not found! Maybe IDs in the leanback library have been changed?");
         }
@@ -83,6 +85,19 @@ public class Overlay {
         mOverlayRoot = parentView.findViewById(R.id.overlay_root);
         mScanProgress = new ScannerAndScraperProgress(mContext, mOverlayRoot);
         mClock = new Clock(mContext, mOverlayRoot);
+        if (fragmentView instanceof com.archos.mediacenter.video.leanback.TopNavigation) {
+            com.archos.mediacenter.video.leanback.TopNavigation nav = (com.archos.mediacenter.video.leanback.TopNavigation) fragmentView;
+            View clock = mOverlayRoot.findViewById(R.id.clock);
+            ((ViewGroup)clock.getParent()).removeView(clock);
+            clock.setPadding(0, 0, 0, 0);
+            ((android.widget.TextView)clock).setGravity(android.view.Gravity.CENTER);
+            View fallbackClock=nav.getStatusContainer().findViewWithTag("preview-default-clock");if(fallbackClock!=null)nav.getStatusContainer().removeView(fallbackClock);
+            nav.getStatusContainer().addView(clock, new android.widget.FrameLayout.LayoutParams(-1, -1));
+            mScanProgress.useFloatingStyle();
+            View progress = mOverlayRoot.findViewById(R.id.progress_group);
+            ((ViewGroup)progress.getParent()).removeView(progress);
+            nav.getScanContainer().addView(progress, new android.widget.FrameLayout.LayoutParams(-2, -2, android.view.Gravity.END | android.view.Gravity.BOTTOM));
+        }
     }
 
     /**

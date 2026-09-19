@@ -52,6 +52,8 @@ public class TVCardDialog extends FrameLayout implements TVSlaveView  {
     int defStyle;
     private boolean isSlaveView;
     private OnDialogResultListener onResult;
+    private Runnable previewDismiss;
+    public void setPreviewDismiss(Runnable callback) { previewDismiss = callback; }
     
     
     public interface OnDialogResultListener{
@@ -127,6 +129,7 @@ public class TVCardDialog extends FrameLayout implements TVSlaveView  {
 
     }
     public void exitDialog(){
+        if (previewDismiss != null) { Runnable finish = previewDismiss; previewDismiss = null; finish.run(); return; }
         
         if(slaveView!=null)
             slaveView.setVisibility(View.GONE);
@@ -166,7 +169,9 @@ public class TVCardDialog extends FrameLayout implements TVSlaveView  {
        
         else if (keyCode == KeyEvent.KEYCODE_DPAD_UP||keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
                 
-            View v = findFocus().focusSearch(keyCode == KeyEvent.KEYCODE_DPAD_UP?FOCUS_UP:FOCUS_DOWN);
+            View focused = findFocus();
+            if (focused == null) { requestFocus(); return true; }
+            View v = focused.focusSearch(keyCode == KeyEvent.KEYCODE_DPAD_UP?FOCUS_UP:FOCUS_DOWN);
             if(v instanceof TVMenuSeparator)
             	v=v.focusSearch(keyCode == KeyEvent.KEYCODE_DPAD_UP?FOCUS_UP:FOCUS_DOWN);
             if(isViewInCard(v))

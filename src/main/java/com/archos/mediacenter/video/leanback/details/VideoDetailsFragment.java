@@ -22,6 +22,7 @@ import android.app.ActivityOptions;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Context;
+import com.archos.mediacenter.video.streaming.StreamingActions;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -196,6 +197,39 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
     private static final int DIALOG_LAUNCH_DELAY_MS = 2000;
 
     /** The video for which we are displaying the details. This object is updated each time we have a DB update */
+    private PreviewMoviePage mPreviewMovie;
+    private com.archos.mediacenter.video.leanback.TopNavigation mPreviewNavigation;
+    private View mNativeDetails;
+    private java.util.concurrent.ExecutorService mPreviewWorker;
+    private boolean mPreviewAutoPlayed;
+    @Override public View onCreateView(android.view.LayoutInflater inflater,android.view.ViewGroup parent,Bundle state){
+        View nativeView=super.onCreateView(inflater,parent,state);
+        if(mVideo==null||mLaunchedFromPlayer||!PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))return nativeView;
+        mNativeDetails=nativeView;android.widget.FrameLayout container=new android.widget.FrameLayout(requireContext());container.addView(nativeView);nativeView.setVisibility(View.GONE);
+        mPreviewMovie=new PreviewMoviePage(requireActivity(),()->mDetailsOverviewRow==null?null:mDetailsOverviewRow.getActionsAdapter(),a->{mOnActionClickedListener.onActionClicked(a);if(mVideo!=null)mPreviewMovie.bind(mVideo);},this::showPreviewTools,uri->{if(mPreviewNavigation!=null)mPreviewNavigation.setArtwork(uri);});
+        container.addView(mPreviewMovie,new android.widget.FrameLayout.LayoutParams(-1,-1));
+        mPreviewNavigation=new com.archos.mediacenter.video.leanback.TopNavigation(requireContext(),container,tab->{
+            if(tab==4)startActivity(new Intent(requireContext(),com.archos.mediacenter.video.leanback.settings.VideoSettingsActivity.class));
+            else if(tab==5)startActivity(new Intent(requireContext(),com.archos.mediacenter.video.leanback.search.VideoSearchActivity.class));
+            else{Intent home=new Intent(requireContext(),com.archos.mediacenter.video.leanback.MainActivityLeanback.class);home.putExtra("preview_tab",tab);home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);startActivity(home);requireActivity().finish();}
+        },()->mPreviewMovie!=null&&mPreviewMovie.atTop());
+        mPreviewNavigation.selectTab(mVideo instanceof Episode?2:1);mPreviewMovie.bind(mVideo);mPreviewMovie.post(mPreviewMovie::focusPrimary);
+        return mPreviewNavigation;
+    }
+    public boolean closePreviewNativeDetails(){return false;}
+    private void showPreviewTools(){
+        com.archos.mediacenter.video.leanback.PreviewDialog.choose(requireContext(),"File, subtitles and artwork",new String[]{"Download subtitles","Choose subtitles","Posters","Backdrops","File information"},-1,n->{
+            if(n==0)performSubtitleDownload();else if(n==1)performSubtitleChoose();else if(n==4)com.archos.mediacenter.video.leanback.PreviewDialog.read(requireContext(),mVideo.getFilenameNonCryptic(),mVideo.getFileUri()==null?"":mVideo.getFileUri().getPath());else showPreviewArtwork(n==2?mPostersRow:mBackdropsRow);
+        });
+    }
+    private void showPreviewArtwork(Row sourceRow){
+        ListRow row=sourceRow instanceof ListRow?(ListRow)sourceRow:null;
+        if(row==null||row.getAdapter().size()==0){Toast.makeText(requireContext(),"No artwork available",Toast.LENGTH_SHORT).show();return;}
+        android.widget.HorizontalScrollView scroll=new android.widget.HorizontalScrollView(requireContext());android.widget.LinearLayout cards=new android.widget.LinearLayout(requireContext());scroll.addView(cards);
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(requireContext()).setTitle(row.getHeaderItem().getName()).setView(scroll).setNegativeButton("Close",null).create();
+        for(int i=0;i<row.getAdapter().size();i++){Object item=row.getAdapter().get(i);Presenter presenter=row.getAdapter().getPresenter(item);Presenter.ViewHolder h=presenter.onCreateViewHolder(cards);presenter.onBindViewHolder(h,item);cards.addView(h.view);h.view.setOnClickListener(v->{dialog.dismiss();getOnItemViewClickedListener().onItemClicked(h,item,null,row);});}dialog.show();com.archos.mediacenter.video.leanback.PreviewDialog.styleNative(dialog);
+    }
+
     private Video mVideo;
     private static boolean mIsVideoWatched = false; // TOFIX: adding internal state since trakt sync can occur much later
 
@@ -373,7 +407,15 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
         // Transition.addListener() - both public android.transition APIs - are always
         // available; no need for androidx.leanback's restricted TransitionHelper/
         // TransitionListener wrappers.
-        Transition transition = getActivity().getWindow().getSharedElementEnterTransition();
+        Intent launchIntent = getActivity().getIntent();
+        boolean cinematic = launchIntent.getSerializableExtra(EXTRA_VIDEO) instanceof Video
+                && !launchIntent.getBooleanExtra(EXTRA_LAUNCHED_FROM_PLAYER, false)
+                && androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui", false);
+        if (cinematic) {
+            getActivity().getWindow().setSharedElementEnterTransition(null);
+            getActivity().getWindow().setSharedElementReturnTransition(null);
+        }
+        Transition transition = cinematic ? null : getActivity().getWindow().getSharedElementEnterTransition();
         if(transition!=null) {
             mAnimationIsRunning = false;
             transition.addListener(new Transition.TransitionListener() {
@@ -422,8 +464,10 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
         FullWidthDetailsOverviewSharedElementHelper helper = new FullWidthDetailsOverviewSharedElementHelper();
         // The overview row is now created from the intent before the DB reload, so a short
         // layout grace period is sufficient; the former 1s timeout visibly held every open.
-        helper.setSharedElementEnterTransition(getActivity(), VideoDetailsActivity.SHARED_ELEMENT_NAME, 200);
-        mOverviewRowPresenter.setListener(helper);
+        if (!cinematic) {
+            helper.setSharedElementEnterTransition(getActivity(), VideoDetailsActivity.SHARED_ELEMENT_NAME, 200);
+            mOverviewRowPresenter.setListener(helper);
+        }
         mOverviewRowPresenter.setBackgroundColor(ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor());
         mOverviewRowPresenter.setActionsBackgroundColor(getDarkerColor(ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor()));
         mOverviewRowPresenter.setOnActionClickedListener(mOnActionClickedListener);
@@ -611,6 +655,14 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mOverlay = new Overlay(this);
+        if(mPreviewMovie!=null){
+            com.archos.mediacenter.video.leanback.PreviewLibraryLoader loader=new com.archos.mediacenter.video.leanback.PreviewLibraryLoader(requireContext().getApplicationContext());
+            final PreviewMoviePage page=mPreviewMovie;
+            mPreviewWorker=java.util.concurrent.Executors.newSingleThreadExecutor();mPreviewWorker.execute(()->{
+                try(android.database.Cursor cursor=loader.loadInBackground()){if(cursor!=null)page.post(()->{if(mPreviewMovie==page&&page.isAttachedToWindow())page.setSnapshot(loader.snapshot);});}
+                catch(RuntimeException ignored){}finally{page.post(loader::reset);}
+            });
+        }
 
         // The clicked card already provides a Video.  Build a provisional overview immediately
         // so the shared-element helper has a destination hero view before the DB reload and
@@ -625,6 +677,9 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
 
     @Override
     public void onDestroyView() {
+        if(mPreviewWorker!=null)mPreviewWorker.shutdownNow();
+        mPreviewMovie=null;mPreviewNavigation=null;mNativeDetails=null;
+        if (mDetailsOverviewRow != null) StreamingActions.cancel(mDetailsOverviewRow.getActionsAdapter());
         mOverlay.destroy();
         delete = null;
         super.onDestroyView();
@@ -653,6 +708,7 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
     @Override
     public void onResume() {
         super.onResume();
+        if (mDetailsOverviewRow != null) StreamingActions.refresh(mDetailsOverviewRow.getActionsAdapter());
         traceDetails("fragment-onResume");
         if (log.isDebugEnabled()) log.debug("onResume");
         mShouldUpdateRemoteResume = true;
@@ -765,6 +821,11 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
     final OnActionClickedListener mOnActionClickedListener = new OnActionClickedListener() {
         @Override
         public void onActionClicked(Action action) {
+            if(mVideo!=null&&mBackdropController!=null){
+                java.io.File cached=mBackdropController.getCurrentlyDisplayedFile();
+                if(cached!=null)mVideo.setPreviewBackdrop(Uri.fromFile(cached).toString());
+            }
+                if (StreamingActions.onClick(action)) return;
             VideoMetadata mMetadata = mVideo.getMetadata();
             isFilePlayable = true;
             // test from FileDetailsRowPresenter to check if file is playable
@@ -856,6 +917,14 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
                 DbUtils.markAsHiddenByUser(getActivity(), mVideo);
             }
             else if (action.getId() == VideoActionAdapter.ACTION_DELETE) {
+                if (mPreviewMovie != null) {
+                    com.archos.mediacenter.video.leanback.PreviewDialog.choose(requireContext(),
+                            getString(R.string.confirm_delete), new String[]{getString(android.R.string.cancel), getString(R.string.delete)},
+                            0, choice -> {
+                                if (choice == 1 && isAdded()) deleteFile_async(mVideo);
+                            });
+                    return;
+                }
                 mShouldDisplayConfirmDelete = true;
                 
                 ((VideoActionAdapter)mDetailsOverviewRow.getActionsAdapter()).update(mVideo, mLaunchedFromPlayer, mShouldDisplayRemoveFromList, mShouldDisplayConfirmDelete, mNextEpisode, mIsTvEpisode);
@@ -1485,6 +1554,20 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
             ((VideoActionAdapter)mDetailsOverviewRow.getActionsAdapter()).update(video, mLaunchedFromPlayer, mShouldDisplayRemoveFromList, mShouldDisplayConfirmDelete, mNextEpisode, mIsTvEpisode);
         }
 
+        if(mPreviewMovie!=null)mPreviewMovie.bind(video);
+        if(!mPreviewAutoPlayed&&requireActivity().getIntent().getBooleanExtra("preview_play",false)){
+            mPreviewAutoPlayed=true;requireActivity().getIntent().removeExtra("preview_play");
+            getView().post(()->{
+                if(!isAdded()||mDetailsOverviewRow==null)return;
+                androidx.leanback.widget.ObjectAdapter actions=mDetailsOverviewRow.getActionsAdapter();
+                for(int id:new int[]{VideoActionAdapter.ACTION_RESUME,VideoActionAdapter.ACTION_LOCAL_RESUME,VideoActionAdapter.ACTION_PLAY,VideoActionAdapter.ACTION_PLAY_FROM_BEGIN,VideoActionAdapter.ACTION_REMOTE_RESUME}){
+                    for(int i=0;i<actions.size();i++){
+                        Object value=actions.get(i);
+                        if(value instanceof Action&&((Action)value).getId()==id){mOnActionClickedListener.onActionClicked((Action)value);return;}
+                    }
+                }
+            });
+        }
         // Plot, Cast, Posters, Backdrops, Links rows will be added after, once we get the Scraper Tags
 
         // Start the scraper related task (backdrop, poster list, backdrop list, web links)
@@ -1637,9 +1720,9 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
                     if(finalResult!=null) {
                         Palette palette = Palette.from(finalResult).generate();
                         if (palette.getDarkVibrantSwatch() != null)
-                            mColor = palette.getDarkVibrantSwatch().getRgb();
+                            mColor = ThemeManager.getInstance(getActivity()).isSlateTheme() ? ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor() : palette.getDarkVibrantSwatch().getRgb();
                         else if (palette.getDarkMutedSwatch() != null)
-                            mColor = palette.getDarkMutedSwatch().getRgb();
+                            mColor = ThemeManager.getInstance(getActivity()).isSlateTheme() ? ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor() : palette.getDarkMutedSwatch().getRgb();
                         else
                             mColor = ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor();
                         dominantColor = mColor;
@@ -1726,6 +1809,7 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
         if(mVideo.getMetadata()!=null) {
             // Tell presenter to update the badges according to the metadata
             mDescriptionPresenter.displayActualVideoBadges(mVideo);
+            if(mPreviewMovie!=null&&mVideo instanceof com.archos.mediacenter.video.browser.adapters.object.Movie)mPreviewMovie.bind((com.archos.mediacenter.video.browser.adapters.object.Movie)mVideo);
 
             // update the details row and replace it in the adapter
             mFileDetailsRow = new FileDetailsRow(getActivity(), mVideo, mPlayerType);
@@ -1800,6 +1884,7 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
                     if (log.isDebugEnabled()) log.debug("onPostExecute");
                     if(getActivity().isDestroyed())
                         return;
+                    if(mPreviewMovie!=null)mPreviewMovie.setTags(finalTags,finalTrailers,finalBackdrops);
                     // Update the action adapter if there is a next episode
                     ((VideoActionAdapter) mDetailsOverviewRow.getActionsAdapter()).setNextEpisodeStatus(mNextEpisode != null);
                     ((VideoActionAdapter) mDetailsOverviewRow.getActionsAdapter()).setListEpisodesStatus(mIsTvEpisode);
@@ -2113,7 +2198,7 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
                             color = ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor();
 
                         if (color != mColor) {
-                            mColor = color;
+                            mColor = ThemeManager.getInstance(getActivity()).isSlateTheme() ? ThemeManager.getInstance(getActivity()).getDetailsPrimaryColor() : color;
 
                             mVideoBadgePresenter.setSelectedBackgroundColor(color);
                             mOverviewRowPresenter.updateBackgroundColor(color);
@@ -2306,8 +2391,7 @@ public class VideoDetailsFragment extends DetailsFragmentWithLessTopOffset imple
         if (log.isDebugEnabled()) log.debug("onDeleteVideoFailed: {}", videoFile);
         if (getActivity() != null) Toast.makeText(getActivity(),R.string.delete_error, Toast.LENGTH_SHORT).show();
 
-        // close the fragment anyway because the un-indexing may work even if the actual delete fails
-        slightlyDelayedFinish();
+        // Failed or cancelled deletion leaves the file and its Details available for retry.
     }
 
     @Override

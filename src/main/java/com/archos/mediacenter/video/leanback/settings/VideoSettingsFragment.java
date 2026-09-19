@@ -83,12 +83,28 @@ public class VideoSettingsFragment extends LeanbackSettingsFragmentCompat {
     }
 
     public static class PrefsFragment extends LeanbackPreferenceFragmentCompat {
+        @Override public void onDisplayPreferenceDialog(androidx.preference.Preference pref){
+            if(PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false)&&PreviewPreferenceDialogs.show(this,pref))return;
+            super.onDisplayPreferenceDialog(pref);
+        }
 
+        @Override public androidx.recyclerview.widget.RecyclerView onCreateRecyclerView(android.view.LayoutInflater inflater,android.view.ViewGroup parent,Bundle state){
+            return PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false)?PreviewSettings.grid(requireContext()):super.onCreateRecyclerView(inflater,parent,state);
+        }
+        @Override public android.view.View onCreateView(android.view.LayoutInflater inflater,android.view.ViewGroup container,Bundle state){
+            android.view.View nativeView=super.onCreateView(inflater,container,state);
+            if(!PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))return nativeView;
+            androidx.recyclerview.widget.RecyclerView list=getListView();if(list.getParent() instanceof android.view.ViewGroup)((android.view.ViewGroup)list.getParent()).removeView(list);
+            android.widget.FrameLayout full=new android.widget.FrameLayout(requireContext());int pad=Math.round(28*getResources().getDisplayMetrics().density);full.setPadding(pad,0,pad,pad);full.addView(list,new android.widget.FrameLayout.LayoutParams(-1,-1));return full;
+        }
+
+        @Override protected androidx.recyclerview.widget.RecyclerView.Adapter onCreateAdapter(PreferenceScreen screen){return PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false)?PreviewSettings.adapter(screen):super.onCreateAdapter(screen);}
         private VideoPreferencesCommon mPreferencesCommon = new VideoPreferencesCommon(this);
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             mPreferencesCommon.onCreatePreferences(savedInstanceState, rootKey);
+            if(PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))PreviewSettings.organise(this);
         }
 
         @Override
@@ -99,6 +115,11 @@ public class VideoSettingsFragment extends LeanbackSettingsFragmentCompat {
             if (getListView() != null) {
                 getListView().setBackgroundColor(ThemeManager.getInstance(requireContext()).getLeanbackBackgroundColor());
             }
+            if (!PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false)&&requireActivity().getIntent().getBooleanExtra("show_streaming_settings", false)) {
+                scrollToPreference("streaming_category");
+                requireActivity().getIntent().removeExtra("show_streaming_settings");
+            }
+            if(PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))PreviewSettings.sidebar(this);
             // Note: Header color is now handled by the theme (MyLeanbackTheme.Preferences.Black)
         }
 

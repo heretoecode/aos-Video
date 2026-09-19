@@ -312,6 +312,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     private Preference mExportManualPreference;
     private Preference mDbExportManualPreference = null;
 
+    private com.archos.mediacenter.video.streaming.StreamingPreferences mStreamingPreferences;
     private PreferenceFragmentCompat mPreferencesFragment;
 
     List<String> OpensubtitlesLanguageListEntries = new ArrayList<>();
@@ -329,8 +330,30 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     private final ActivityResultLauncher<Intent> mFolderPickerLauncher;
     private final ActivityResultLauncher<Intent> mTraktAuthLauncher;
 
+    private final ActivityResultLauncher<String> backupDestination;
+    private final ActivityResultLauncher<String[]> backupSource;
+
     public VideoPreferencesCommon(PreferenceFragmentCompat preferencesFragment) {
         mPreferencesFragment = preferencesFragment;
+        backupDestination = preferencesFragment.registerForActivityResult(new ActivityResultContracts.CreateDocument("application/octet-stream"), uri -> {
+            if (uri == null) return;
+            try{getContext().getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(SecurityException transientGrant){android.util.Log.d("NovaPreview","Backup provider offers a temporary grant");}
+            Intent intent = new Intent(MediaLibraryBackupService.ACTION_EXPORT, null, getActivity(), MediaLibraryBackupService.class);
+            intent.putExtra(MediaLibraryBackupService.EXTRA_EXPORT_URI, uri.toString());
+            androidx.core.content.ContextCompat.startForegroundService(getContext(),intent);
+        });
+        backupSource = preferencesFragment.registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri == null) return;
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                .setTitle("Restore SUPERNOVA backup")
+                .setMessage("Replace the library and restore saved settings? A recovery backup will be kept first.")
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Restore", (dialog, which) -> {
+                    Intent intent = new Intent(MediaLibraryBackupService.ACTION_IMPORT, null, getActivity(), MediaLibraryBackupService.class);
+                    intent.putExtra(MediaLibraryBackupService.EXTRA_IMPORT_FILE, uri.toString());
+                    getContext().startService(intent);
+                }).show();
+        });
         mFolderPickerLauncher = preferencesFragment.registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onFolderPickerResult);
@@ -441,7 +464,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         if (mSharedPreferences.getBoolean(KEY_ADVANCED_VIDEO_ENABLED, false)) {
             // advanced preferences
             Editor editor = mSharedPreferences.edit();
-            editor.remove(KEY_FORCE_SW);
+            if(!mSharedPreferences.getBoolean("try_new_ui",false))editor.remove(KEY_FORCE_SW);
             editor.apply();
             // no need of the enable sponsor link if not installed from ggplay
             if (! ArchosUtils.isInstalledfromPlayStore(getContext())) {
@@ -467,8 +490,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
             // normal preferences
             //Editor editor = mDecChoicePreferences.getEditor();
             Editor editor = mSharedPreferences.edit();
-            editor.remove(KEY_DEC_CHOICE);
-            editor.remove(KEY_AUDIO_INTERFACE_CHOICE);
+            if(!mSharedPreferences.getBoolean("try_new_ui",false)){editor.remove(KEY_DEC_CHOICE);editor.remove(KEY_AUDIO_INTERFACE_CHOICE);}
             editor.apply();
             aboutCategory.removePreference(mEnableSponsor);
             prefCategory.removePreference(mDecChoicePreferences);
@@ -665,6 +687,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         resetPassthroughPref(mSharedPreferences);
 
         addPreferencesFromResource(R.xml.preferences_video);
+        mStreamingPreferences = new com.archos.mediacenter.video.streaming.StreamingPreferences(mPreferencesFragment);
 
         TorrentPathDialogPreference torrentPref =
                 (TorrentPathDialogPreference) findPreference(KEY_TORRENT_PATH);
@@ -849,7 +872,21 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         }
         mAboutPreferences = (PreferenceCategory) findPreference(KEY_ABOUT_PREFERENCES);
         Preference novaVersion = (Preference) findPreference("preferences_version");
-        novaVersion.setTitle(mSharedPreferences.getString("nova_version", "@string/APP_INFO"));
+        novaVersion.setTitle("Build");
+        novaVersion.setSummary(com.archos.mediacenter.video.BuildConfig.VERSION_NAME);
+        novaVersion.setOnPreferenceClickListener(preference -> {
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+                    .setTitle("SUPERNOVA Preview · Build")
+                    .setMessage("Version: " + com.archos.mediacenter.video.BuildConfig.VERSION_NAME
+                        + "\nVersion code: " + com.archos.mediacenter.video.BuildConfig.VERSION_CODE
+                        + "\nCustom Git SHA: " + com.archos.mediacenter.video.BuildConfig.PREVIEW_GIT_SHA
+                        + "\nBuilt (UTC): " + com.archos.mediacenter.video.BuildConfig.PREVIEW_BUILD_UTC
+                        + "\nPackage: " + getActivity().getPackageName()
+                        + "\nBase NOVA: 6.4.63"
+                        + "\nSource: https://github.com/heretoecode/aos-Video")
+                    .setPositiveButton(android.R.string.ok, null).show();
+            return true;
+        });
 
         mSmb2 = (CheckBoxPreference) findPreference(KEY_SMB2);
         mSmbResolver = (CheckBoxPreference) findPreference(KEY_SMB_RESOLV);
@@ -978,24 +1015,28 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         });
 
         Preference exportLibraryPreference = findPreference(getString(R.string.media_library_export_prefkey));
+        exportLibraryPreference.setSummary("Settings, saved credentials, sources, rows and viewing history. Downloaded artwork is re-fetched after restore. Keep this archive private.");
         exportLibraryPreference.setOnPreferenceClickListener(preference -> {
-            if (LoaderUtils.getScrapeInProgress()) {
-                //Stop the scrape.
-                LoaderUtils.setScrapeInProgress(false);
+            new androidx.appcompat.app.AlertDialog.Builder(getActivity()).setTitle("Back up Supernova?").setMessage("This archive includes saved network and account credentials. Store it somewhere private. Android storage permissions may need to be granted again on a new device.").setNegativeButton("Cancel",null).setPositiveButton("Continue",(confirmation,which)->{
+
+            try { backupDestination.launch("nova-backup-" + new java.text.SimpleDateFormat("yyyy-MM-dd-HHmm", java.util.Locale.ROOT).format(new java.util.Date()) + ".zip.in-progress"); }
+            catch (android.content.ActivityNotFoundException missing) {
+                new androidx.appcompat.app.AlertDialog.Builder(getActivity()).setMessage("Install a document picker to choose a backup location. You can still export to SUPERNOVA's folder.")
+                    .setPositiveButton("Export here", (d,w) -> getContext().startService(new Intent(MediaLibraryBackupService.ACTION_EXPORT, null, getActivity(), MediaLibraryBackupService.class)))
+                    .setNegativeButton(android.R.string.cancel,null).show();
             }
-            Toast.makeText(getActivity(), R.string.media_library_export_in_progress, Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(MediaLibraryBackupService.ACTION_EXPORT, null, getActivity(), MediaLibraryBackupService.class);           
-            getContext().startService(intent);
+            }).show();
             return true;
         });
-
         Preference importLibraryPreference = findPreference(getString(R.string.media_library_import_prefkey));
         importLibraryPreference.setOnPreferenceClickListener(preference -> {
-            showImportDialog();
+            try { backupSource.launch(new String[]{"application/zip", "application/octet-stream"}); }
+            catch (android.content.ActivityNotFoundException missing) { showImportDialog(); }
             return true;
         });
 
         findPreference(KEY_RESCAN_STORAGE).setOnPreferenceClickListener(preference -> {
+            com.archos.mediaprovider.video.NetworkAutoRefresh.forceRescan(getContext());
             if (LoaderUtils.getScrapeInProgress()) {
                 //Stop the scrape.
                 LoaderUtils.setScrapeInProgress(false);
@@ -1630,6 +1671,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     }
 
     public void onDestroy() {
+        if (mStreamingPreferences != null) mStreamingPreferences.close();
         if (mSharedPreferences != null)
             mSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         if (mOsPreferences != null && mOsPrefsListener != null)

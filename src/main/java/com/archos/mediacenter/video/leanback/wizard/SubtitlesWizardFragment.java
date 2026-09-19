@@ -46,6 +46,10 @@ public class SubtitlesWizardFragment extends GuidedStepSupportFragment {
     private Overlay mOverlay;
 
     private SubtitlesWizardCommon mWizardCommon;
+    private final java.util.concurrent.ExecutorService worker = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
+    private boolean closed;
+    private boolean busy;
 
     @Override
     public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
@@ -69,11 +73,18 @@ public class SubtitlesWizardFragment extends GuidedStepSupportFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mOverlay = new Overlay(this);
+        worker.execute(() -> {
+            mWizardCommon.loadFiles();
+            main.post(() -> { if (!closed && isAdded()) setActions(createActions()); });
+        });
     }
 
     @Override
     public void onDestroyView(){
-        mOverlay.destroy();
+        closed = true;
+        worker.shutdownNow();
+        main.removeCallbacksAndMessages(null);
+        if (mOverlay != null) mOverlay.destroy();
         super.onDestroyView();
     }
 
@@ -94,33 +105,22 @@ public class SubtitlesWizardFragment extends GuidedStepSupportFragment {
         int actionId = (int)action.getId();
         ActionData actionData = mActions.get(actionId);
 
-        if (actionData != null) {
-            FileData fileData = mFiles.get(actionData.fileId);
-
-            if (fileData != null) {
-                if (actionData.delete) {
-                    boolean fileDeleted = mWizardCommon.deleteFile(fileData.path, fileData.index, fileData.current);
-
-                    if (fileDeleted) {
-                        setActions(createActions());
-                        getActivity().setResult(Activity.RESULT_OK);
-
-                        return true;
-                    }
+        if (busy || actionData == null) return false;
+        FileData fileData = mFiles.get(actionData.fileId);
+        if (fileData == null) return false;
+        busy = true;
+        worker.execute(() -> {
+            boolean changed = actionData.delete
+                ? mWizardCommon.deleteFile(fileData.path, fileData.index, fileData.current)
+                : mWizardCommon.renameFile(fileData.path, fileData.index);
+            main.post(() -> {
+                busy = false;
+                if (!closed && isAdded()) {
+                    setActions(createActions());
+                    if (changed) requireActivity().setResult(Activity.RESULT_OK);
                 }
-                else {
-                    boolean fileRenamed = mWizardCommon.renameFile(fileData.path, fileData.index);
-
-                    if (fileRenamed) {
-                        setActions(createActions());
-                        getActivity().setResult(Activity.RESULT_OK);
-
-                        return true;
-                    }
-                }
-            }
-        }
-
+            });
+        });
         return false;
     }
 

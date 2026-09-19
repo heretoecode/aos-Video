@@ -283,6 +283,7 @@ public class NetworkServerCredentialsDialog extends DialogFragment {
                     Toast.makeText(getActivity(), getString(R.string.ssh_remote_address_error), Toast.LENGTH_SHORT).show();
             }});
         mDialog = builder.create();
+        mDialog.setOnShowListener(ignored -> com.archos.mediacenter.video.leanback.PreviewDialog.styleNative(mDialog));
 
         return mDialog;
 

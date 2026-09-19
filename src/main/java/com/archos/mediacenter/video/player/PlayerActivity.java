@@ -310,8 +310,10 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_PROGRESS_VISIBLE:
-                    if (mProgressView != null)
+                    if (mProgressView != null) {
+                        if(mProgressView instanceof PreviewPlaybackLoading){((PreviewPlaybackLoading)mProgressView).bind(mVideoInfo,mTitle);mPlayerController.setVideoTitleEnabled(false);}
                         mProgressView.setVisibility(View.VISIBLE);
+                    }
                     break;
                 case MSG_TORRENT_STARTED:
                     start();
@@ -682,6 +684,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
             public void handleOnBackPressed() {
                 log.info("Back navigation: OnBackPressedDispatcher callback, dialogId={}",
                         mShowingDialogId);
+                if(previewUpNext!=null&&previewUpNext.cancelFocused())return;
                 if (mPlayerController != null && mPlayerController.handleBackPressed()) {
                     // The player controller dismisses a nested TV card before the main TV menu.
                 } else {
@@ -774,6 +777,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         actionBar.setDisplayShowHomeEnabled(false);
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setBackgroundDrawable(null);
+        if(mPreferences.getBoolean("try_new_ui",false))actionBar.hide();
 
         mPaused = false;
         mPlayerControllerPlaceholder = findViewById(R.id.player_controller_placeholder);
@@ -795,10 +799,15 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
 
         View menuAnchor = mRootView.findViewById(R.id.menu_anchor);
         mProgressView = mRootView.findViewById(R.id.progress_indicator);
+        if(mPreferences.getBoolean("try_new_ui",false)){
+            ViewGroup parent=(ViewGroup)mProgressView.getParent();int index=parent.indexOfChild(mProgressView);
+            ViewGroup.LayoutParams params=mProgressView.getLayoutParams();params.width=ViewGroup.LayoutParams.MATCH_PARENT;params.height=ViewGroup.LayoutParams.MATCH_PARENT;
+            parent.removeView(mProgressView);mProgressView=new PreviewPlaybackLoading(this,getIntent());parent.addView(mProgressView,index,params);
+        }
         mBufferView = (TextView) mRootView.findViewById(R.id.buffer_percentage);
 
         mPlayerController = new PlayerController(mContext, getWindow(), (ViewGroup)mRootView, mSurfaceController, this, actionBar);
-        mPlayerController.setVideoTitleEnabled(true);
+        mPlayerController.setVideoTitleEnabled(!(mProgressView instanceof PreviewPlaybackLoading));
 
         mAudioInfoController = new TrackInfoController(mContext, getLayoutInflater(), menuAnchor, actionBar);
         mAudioInfoController.setListener(this);
@@ -939,9 +948,11 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         }
     }
 
+    private PreviewUpNext previewUpNext;
     @Override
     protected void onStart() {
         super.onStart();
+        if(isTVMode&&androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getBoolean("try_new_ui",false)&&previewUpNext==null)previewUpNext=new PreviewUpNext(this);
         if (log.isDebugEnabled()) log.debug("onStart()");
         mStopped = false;
         removeNetworkListener();
@@ -961,7 +972,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
                 Integer.parseInt(mPreferences.getString(KEY_PLAYER_AUTO_FORMAT, "-1")));
         
         //Set up projector mode if we need it, otherwise dont even call.
-        if (mPreferences.getBoolean(KEY_PLAYER_PROJECTOR_MODE, false)) mSurfaceController.setProjectorMode(true);
+        mSurfaceController.setProjectorMode(mPreferences.getBoolean(KEY_PLAYER_PROJECTOR_MODE, false));
         
         if (log.isDebugEnabled()) log.debug("onStart: Setting audio transformer");
         if (LibAvos.isAvailable()) {
@@ -1220,6 +1231,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
 
     @Override
     protected void onStop() {
+        if(previewUpNext!=null){previewUpNext.stop();previewUpNext=null;}
         super.onStop();
         if (log.isDebugEnabled()) log.debug("onStop");
 
@@ -1517,6 +1529,12 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         if (intent != null && !intent.hasExtra(PlayerService.LAUNCH_GENERATION)) {
             intent.putExtra(PlayerService.LAUNCH_GENERATION, UUID.randomUUID().toString());
         }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if(previewUpNext!=null&&previewUpNext.handleKey(event,()->{if(mPlayerController!=null)mPlayerController.showControlBar();}))return true;
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -2036,6 +2054,27 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
             return "A";
     }
 
+    private boolean previewPreferredSubtitle(int position) {
+        if (position == 0 || mPlayer == null || mPlayer.getVideoMetadata() == null) return true;
+        SubtitleTrack track = mPlayer.getVideoMetadata().getSubtitleTrack(positionToSubtitleTrack(position, mVideoInfo.nbSubtitles));
+        if (track == null) return true;
+        String language = track.isExternal
+                ? getSubLanguageFromSubPathAndVideoPath(mContext, track.path, mUri.toString()) : track.language;
+        if (language == null) return true;
+        String preferred = mPreferences.getString("favSubLang", Locale.getDefault().getISO3Language());
+        return previewSubtitleLanguageMatches(preferred, language)
+                || previewSubtitleLanguageMatches("eng", language);
+    }
+
+    static boolean previewSubtitleLanguageMatches(String code, String language) {
+        if (language == null) return false;
+        if (language.length() <= 3 && ISO639codes.isFavoriteLanguageMatch(code, language)) return true;
+        // External subtitle names have already been localised and may carry the HI suffix.
+        String name = language.replaceFirst("(?i)\\s*\\(HI\\)$", "").trim();
+        return name.equalsIgnoreCase(ISO639codes.getLanguageNameForLetterCode(code))
+                || name.equalsIgnoreCase(ISO639codes.getEnglishLanguageNameForLetterCode(code));
+    }
+
     private void refreshSubtitleTVMenu() {
         if (mSubtitleTVMenu != null) {
             mSubtitleTVMenu.clean();
@@ -2046,7 +2085,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
 
             if(mSubtitleInfoController.getTrackCount()>0) {
                 for (int i = 0; i < mSubtitleInfoController.getTrackCount(); i++) {
-                    mSubtitleTVMenu.createAndAddTVMenuItem(mSubtitleInfoController.getTrackNameAt(i).toString(), true, mSubtitleInfoController.getTrack() == i);
+                    TVMenuItem item = mSubtitleTVMenu.createAndAddTVMenuItem(mSubtitleInfoController.getTrackNameAt(i).toString(), true, mSubtitleInfoController.getTrack() == i);
+                    item.setTag(previewPreferredSubtitle(i));
                 }
                 mSubtitleTVMenu.createAndAddSeparator();
                 mSubtitleDelayMenuItem = mSubtitleTVMenu.createAndAddTVMenuItem(getText(R.string.player_pref_subtitle_delay_title).toString(), false, false);
@@ -2145,7 +2185,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
 
                 mAudioTracksTVMenu.createAndAddSeparator();
 
-                final TVMenuItem tvmi3 = mAudioTracksTVMenu.createAndAddTVMenuItem(getText(R.string.player_pref_subtitle_delay_title).toString(), false, false);
+                final TVMenuItem tvmi3 = mAudioTracksTVMenu.createAndAddTVMenuItem(getText(R.string.player_pref_audio_delay_title).toString(), false, false);
                 tvmi3.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -2937,7 +2977,17 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         }).setNegativeButton(android.R.string.cancel, null).show();
     }
 
-    private void showVideoInfos() {
+    public String previewAudioLabel(){if(mPlayer!=null&&mPlayer.getVideoMetadata()!=null&&mVideoInfo!=null){VideoMetadata metadata=mPlayer.getVideoMetadata();int track=mVideoInfo.audioTrack;if(track>=0&&track<metadata.getAudioTrackNb()){VideoMetadata.AudioTrack audio=metadata.getAudioTrack(track);if(audio!=null)return PreviewTrackLabel.concise(audio.language,audio.format,audio.channels,"Audio");}}if(mAudioInfoController==null||mAudioInfoController.getTrackCount()==0)return "Audio";int i=mAudioInfoController.getTrack();return i>=0&&i<mAudioInfoController.getTrackCount()?String.valueOf(mAudioInfoController.getTrackNameAt(i)):"Audio";}
+    public String previewSubtitleLabel(){if(mPlayer!=null&&mPlayer.getVideoMetadata()!=null&&mVideoInfo!=null){VideoMetadata metadata=mPlayer.getVideoMetadata();int track=mVideoInfo.subtitleTrack;if(track<0||track>=metadata.getSubtitleTrackNb())return "Off";SubtitleTrack subtitle=metadata.getSubtitleTrack(track);if(subtitle!=null){String language=subtitle.isExternal?getSubLanguageFromSubPathAndVideoPath(mContext,subtitle.path,mUri.toString()):subtitle.language;return PreviewTrackLabel.concise(language,"","","Subtitles");}}if(mSubtitleInfoController==null||mSubtitleInfoController.getTrackCount()==0)return "Subtitles off";int i=mSubtitleInfoController.getTrack();return i>=0&&i<mSubtitleInfoController.getTrackCount()?String.valueOf(mSubtitleInfoController.getTrackNameAt(i)):"Subtitles";}
+    public boolean previewHasAudio(){return mAudioInfoController!=null&&mAudioInfoController.getTrackCount()>0;}
+    public void bindPreviewTitleArtwork(android.widget.TextView title){com.archos.mediacenter.video.leanback.OfficialTitleArtwork.bind(title,mVideoInfo);}
+    public String previewTitle(){return mVideoInfo!=null&&mVideoInfo.isScraped&&mVideoInfo.scraperTitle!=null?mVideoInfo.scraperTitle:mTitle==null?"":mTitle;}
+    public String previewEpisode(){return mVideoInfo!=null&&mVideoInfo.isShow?String.format(java.util.Locale.getDefault(),"Season %d • Episode %d",mVideoInfo.scraperSeasonNr,mVideoInfo.scraperEpisodeNr)+(mVideoInfo.scraperEpisodeName==null?"":" · "+mVideoInfo.scraperEpisodeName):"";}
+    void showVideoInfos() {
+        if(mPreferences.getBoolean("try_new_ui",false)&&isTVMode){Object media=getIntent().getSerializableExtra(PlayerService.VIDEO);if(media instanceof com.archos.mediacenter.video.browser.adapters.object.Video&&((com.archos.mediacenter.video.browser.adapters.object.Video)media).getId()!=mVideoId)media=null;PreviewPlaybackInfo.show(this,previewTitle(),previewEpisode(),media,()->{if(mPlayer!=null){mPlayer.seekTo(0);mPlayer.start(PlayerController.STATE_NORMAL);}},this::showNativeVideoInfos);return;}
+        showNativeVideoInfos();
+    }
+    private void showNativeVideoInfos() {
         mPlayerController.hide();
 
         Class infoActivity = null;
@@ -3268,6 +3318,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         }
 
         mPlayerController.setVideoTitle(mTitle);
+        if(mProgressView instanceof PreviewPlaybackLoading)((PreviewPlaybackLoading)mProgressView).bind(mVideoInfo,mTitle);
         if (log.isDebugEnabled()) log.debug("setVideoInfo: mTitle {}, call postVideoInfoAndPrepared", mTitle);
         postVideoInfoAndPrepared();
     }
@@ -3285,7 +3336,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
             }
             mThumbnailDone = 0;
             mHandler.removeMessages(MSG_PROGRESS_VISIBLE);
-            mProgressView.setVisibility(View.GONE);
+            if(mProgressView instanceof PreviewPlaybackLoading)((PreviewPlaybackLoading)mProgressView).waitForFrame(mRootView);else mProgressView.setVisibility(View.GONE);
+            mPlayerController.setVideoTitleEnabled(true);
             PlayerService.sPlayerService.setAudioFilt();
             mPlayerController.start();
             // Now that the video is loaded, Video info should be avalaible
@@ -3335,8 +3387,10 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
         if (mBufferView != null)
             mBufferView.setText("");
         mHandler.removeMessages(MSG_PROGRESS_VISIBLE);
-        if(!Player.sPlayer.isPlaying())
-            mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_PROGRESS_VISIBLE), PROGRESS_VISIBLE_DELAY);
+        if(!Player.sPlayer.isPlaying()){
+            if(mProgressView instanceof PreviewPlaybackLoading){((PreviewPlaybackLoading)mProgressView).begin();mHandler.sendEmptyMessage(MSG_PROGRESS_VISIBLE);}
+            else mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_PROGRESS_VISIBLE), PROGRESS_VISIBLE_DELAY);
+        }
 
         if (mUri == null) {
             myShowDialog(DIALOG_ERROR);
@@ -4135,6 +4189,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
             sendExternalPlayerResult();
         }
         super.finish();
+        if(mPreferences!=null&&mPreferences.getBoolean("try_new_ui",false))overridePendingTransition(0,0);
     }
 
     /*
@@ -4303,7 +4358,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
                 // when no name use track number instead of R.string.unknown_track_name th
                 if (trackName.isEmpty())
                     name = getText(R.string.player_track) + " " + (i + 1);
-                CharSequence summary = audio.format;
+                CharSequence summary = audio.format + (audio.channels == null || audio.channels.isEmpty() ? "" : " · " + audio.channels);
+                if (mPreferences.getBoolean("try_new_ui", false) && audio.channels != null && !audio.channels.isEmpty()) name = name + " · " + audio.channels;
                 mAudioInfoController.addTrack(name, summary, false);
             }
             mAudioInfoController.setTrack(mVideoInfo.audioTrack);

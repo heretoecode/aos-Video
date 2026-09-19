@@ -39,6 +39,9 @@ public class ThemeManager {
     private static final String TAG = "ThemeManager";
     public static final String KEY_APP_THEME = "app_theme";
     
+    public static final String THEME_SLATE = "slate";
+    public boolean isSlateTheme() { return THEME_SLATE.equals(getCurrentTheme()); }
+
     public static final String THEME_BLUE = "blue";
     public static final String THEME_BLACK = "black";
     
@@ -46,25 +49,25 @@ public class ThemeManager {
     private SharedPreferences mPrefs;
     
     // Theme color resource IDs - resolved at runtime via getThemeColor()
-    private static final int[] GRID_ITEM_BACKGROUND = {R.color.theme_grid_item_blue, R.color.theme_grid_item_black};
-    private static final int[] LEANBACK_BACKGROUND = {R.color.theme_background_blue, R.color.theme_background_black};
+    private static final int[] GRID_ITEM_BACKGROUND = {R.color.theme_grid_item_blue, R.color.theme_grid_item_black, R.color.theme_grid_item_slate};
+    private static final int[] LEANBACK_BACKGROUND = {R.color.theme_background_blue, R.color.theme_background_black, R.color.theme_background_slate};
     private static final int[] LEANBACK_TRANSPARENT = {R.color.leanback_background_transparent, R.color.leanback_background_transparent};
-    private static final int[] LEANBACK_HEADER = {R.color.theme_header_blue, R.color.theme_header_black};
-    private static final int[] TOOLBAR_BACKGROUND = {R.color.theme_toolbar_blue, R.color.theme_toolbar_black};
-    private static final int[] DETAILS_PRIMARY = {R.color.theme_details_primary_blue, R.color.theme_details_primary_black};
-    private static final int[] DETAILS_SECONDARY = {R.color.theme_details_secondary_blue, R.color.theme_details_secondary_black};
-    private static final int[] CATEGORY_SELECTOR = {R.color.theme_category_selector_blue, R.color.theme_category_selector_black};
-    private static final int[] LIST_ITEM_PRESSED = {R.color.theme_list_pressed_blue, R.color.theme_list_pressed_black};
-    private static final int[] LIST_ITEM_FOCUSED = {R.color.theme_list_focused_blue, R.color.theme_list_focused_black};
-    private static final int[] GRADIENT_START = {R.color.theme_gradient_start_blue, R.color.theme_gradient_start_black};
-    private static final int[] GRADIENT_END = {R.color.theme_gradient_end_blue, R.color.theme_gradient_end_black};
-    private static final int[] RESCAN_COLOR = {R.color.theme_rescan_blue, R.color.theme_rescan_black};
-    private static final int[] SEARCH_AFFORDANCE = {R.color.theme_search_affordance_blue, R.color.theme_search_affordance_black};
+    private static final int[] LEANBACK_HEADER = {R.color.theme_header_blue, R.color.theme_header_black, R.color.theme_header_slate};
+    private static final int[] TOOLBAR_BACKGROUND = {R.color.theme_toolbar_blue, R.color.theme_toolbar_black, R.color.theme_toolbar_slate};
+    private static final int[] DETAILS_PRIMARY = {R.color.theme_details_primary_blue, R.color.theme_details_primary_black, R.color.theme_details_primary_slate};
+    private static final int[] DETAILS_SECONDARY = {R.color.theme_details_secondary_blue, R.color.theme_details_secondary_black, R.color.theme_details_secondary_slate};
+    private static final int[] CATEGORY_SELECTOR = {R.color.theme_category_selector_blue, R.color.theme_category_selector_black, R.color.theme_category_selector_slate};
+    private static final int[] LIST_ITEM_PRESSED = {R.color.theme_list_pressed_blue, R.color.theme_list_pressed_black, R.color.theme_list_pressed_slate};
+    private static final int[] LIST_ITEM_FOCUSED = {R.color.theme_list_focused_blue, R.color.theme_list_focused_black, R.color.theme_list_focused_slate};
+    private static final int[] GRADIENT_START = {R.color.theme_gradient_start_blue, R.color.theme_gradient_start_black, R.color.theme_gradient_start_slate};
+    private static final int[] GRADIENT_END = {R.color.theme_gradient_end_blue, R.color.theme_gradient_end_black, R.color.theme_gradient_end_slate};
+    private static final int[] RESCAN_COLOR = {R.color.theme_rescan_blue, R.color.theme_rescan_black, R.color.theme_rescan_slate};
+    private static final int[] SEARCH_AFFORDANCE = {R.color.theme_search_affordance_blue, R.color.theme_search_affordance_black, R.color.theme_search_affordance_slate};
     
     private Context mContext;
     
     private int getThemeColor(int[] colorArray) {
-        int index = isBlackTheme() ? 1 : 0;
+        int index = isSlateTheme() && colorArray.length > 2 ? 2 : (isBlackTheme() ? 1 : 0);
         return ContextCompat.getColor(mContext, colorArray[index]);
     }
 
@@ -84,7 +87,7 @@ public class ThemeManager {
      * Get the current theme setting
      */
     public String getCurrentTheme() {
-        return mPrefs.getString(KEY_APP_THEME, THEME_BLUE);
+        return mPrefs.getBoolean("try_new_ui", false) ? THEME_SLATE : mPrefs.getString(KEY_APP_THEME, THEME_SLATE);
     }
     
     /**
@@ -196,7 +199,7 @@ public class ThemeManager {
      * Get accent color for progress bars and other accent UI elements
      */
     public int getAccentColor() {
-        return ContextCompat.getColor(mContext, isBlackTheme() ? R.color.theme_accent_black : R.color.theme_accent_blue);
+        return ContextCompat.getColor(mContext, isSlateTheme() ? R.color.theme_accent_slate : (isBlackTheme() ? R.color.theme_accent_black : R.color.theme_accent_blue));
     }
 
     /**
@@ -205,7 +208,7 @@ public class ThemeManager {
      * Black theme: dark charcoal grey
      */
     public int getPrivateModeColor() {
-        return ContextCompat.getColor(mContext, isBlackTheme() ? R.color.theme_private_mode_black : R.color.theme_private_mode_blue);
+        return ContextCompat.getColor(mContext, isSlateTheme() ? R.color.theme_private_mode_slate : (isBlackTheme() ? R.color.theme_private_mode_black : R.color.theme_private_mode_blue));
     }
 
     /**

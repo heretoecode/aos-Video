@@ -115,6 +115,12 @@ android {
                 keyAlias = keystoreProperties['keyAlias']
                 keyPassword = keystoreProperties['keyPassword']
             }
+            if (project.hasProperty("markPreview")) {
+                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
             enableV3Signing = true
             enableV4Signing = true
         }
@@ -151,7 +157,8 @@ android {
         }
     }
     defaultConfig {
-        applicationId = "org.courville.nova"
+        applicationId = project.hasProperty("markPreview") ? "org.courville.nova.markpreview" : "org.courville.nova"
+        manifestPlaceholders = [novaLaunchTheme: project.hasProperty("markPreview") ? "@style/PreviewLaunch" : "@style/MyLeanbackTheme.Launcher", novaEntryTheme: project.hasProperty("markPreview") ? "@style/PreviewEntry" : "@style/ArchosThemeLauncher", novaIcon: project.hasProperty("markPreview") ? "@drawable/preview_custom_icon" : "@mipmap/ic_launcher", novaBanner: project.hasProperty("markPreview") ? "@drawable/preview_custom_banner" : "@drawable/nova_banner"]
         generatedDensities = []
         minSdkVersion 23
         targetSdkVersion 36
@@ -159,8 +166,8 @@ android {
         // below version tracks the one from F-Droid or universal package when generated with ./gradlew -Puniversal
         // this is overridden when using split apk and normal split apk generation or oneapk amazon generation
         // amazon apk is generated with ./gradlew -Poneapk
-        versionCode = 6040063
-        versionName = '6.4.63'
+        versionCode = 6040077
+        versionName = project.hasProperty("markPreview") ? '6.4.63-mark.4.1.1-preview' : '6.4.63-mark.3'
         def novaVersionName = versionName
         if (! project.hasProperty("universal")) {
             // override versionName and versionCode to get it dependent on the date
@@ -197,6 +204,9 @@ android {
             buildConfigField "boolean", "ENABLE_BUG_REPORT", "false"
             buildConfigField "String", "SENTRY_DSN", "\"\"";
         }
+        def previewSource = providers.exec { commandLine 'git', 'rev-parse', 'HEAD' }.standardOutput.asText.get().trim()
+        buildConfigField "String", "PREVIEW_GIT_SHA", "\"${previewSource}\""
+        buildConfigField "String", "PREVIEW_BUILD_UTC", "\"${new Date().format('yyyy-MM-dd HH:mm', TimeZone.getTimeZone('UTC'))}\""
         resValue "string", "VERSION_NAME", versionName
         resValue "string", "APP_INFO", "Nova v" + versionName + " (" + applicationId + ")"
     }
@@ -249,6 +259,7 @@ android {
     buildTypes {
         println("buildTypes archivesBaseName : " + archivesNameValue)
         release {
+            if (project.hasProperty('markSigning')) signingConfig signingConfigs.debug
             minifyEnabled = true
             shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-project.txt'
@@ -358,6 +369,10 @@ androidComponents {
 dependencies {
     implementation project(':FileCoreLibrary')
     implementation project(':MediaLib')
+    // Reuse MediaLib's existing TMDb client for progressive person portraits.
+    implementation 'com.uwetrottmann.tmdb2:tmdb-java:2.13.0'
+    // CustomApplication imports the provider directly; library implementation dependencies are not exposed.
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.85'
     implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
     // needed for old Android versions when using java 17
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'

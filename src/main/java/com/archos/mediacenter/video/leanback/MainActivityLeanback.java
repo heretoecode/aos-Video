@@ -107,6 +107,16 @@ public class MainActivityLeanback extends LeanbackActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // singleTask reuses this activity when a secondary screen selects a section.
+        setIntent(intent);
+        MainFragment browse = (MainFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.main_browse_fragment);
+        if (browse != null) browse.consumePreviewNavigation();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         log.warn("onCreate: MainActivityLeanback instance created: {}", this.hashCode());
         
@@ -119,6 +129,7 @@ public class MainActivityLeanback extends LeanbackActivity {
         ((CustomApplication) getApplication()).loadLocale();
 
         super.onCreate(savedInstanceState);
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("try_new_ui",false))getWindow().setBackgroundDrawable(new com.archos.mediacenter.video.leanback.PreviewStartupSurface(this));
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             private long mBackStartedAt;
@@ -138,6 +149,8 @@ public class MainActivityLeanback extends LeanbackActivity {
                     return;
                 }
 
+                MainFragment browse = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.main_browse_fragment);
+                if (browse != null && browse.focusTopNavigation()) return;
                 setEnabled(false);
                 getOnBackPressedDispatcher().onBackPressed();
                 setEnabled(true);

@@ -1,0 +1,26 @@
+{
+  "preview": "4.1.1",
+  "versionName": "6.4.63-mark.4.1.1-preview",
+  "versionCode": 6040077,
+  "package": "org.courville.nova.markpreview",
+  "source_commit": "75cfbf2fb7970912de5660a53c925c5b7ee7d67f",
+  "build_run": 35451721845,
+  "build_status": "success",
+  "apk": "NOVA_Preview_4.1.1.apk",
+  "apk_bytes": 82314749,
+  "apk_sha256": "6849af8484f04e6d4820a02a57ad01e20257ce560169fc8822dd8bb248dee07d",
+  "certificate_sha256": "89ac087ed6f989c90482d4a999f80511fe6ceee26ef1b9c37a142a9f00d39a5a",
+  "apk_drive_id": "123e0QkdRuj32bM7_-ZROvRY-AKaKggJr",
+  "unit_tests": {
+    "tests": 33,
+    "failures": 0,
+    "skipped": 0,
+    "seconds": 14.715
+  },
+  "release_lint": {
+    "errors": 0,
+    "warnings": 1396
+  },
+  "physical_shield_qa": "NOT TESTED \u2014 USER QA REQUIRED",
+  "exact_codex_usage": "unavailable"
+}

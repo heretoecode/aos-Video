@@ -152,6 +152,16 @@ public class NetworkRootFragment extends BrowseSupportFragment {
         mShortcutsLoaderTask.execute();
     }
 
+    @Override public View onCreateView(android.view.LayoutInflater inflater,android.view.ViewGroup parent,Bundle state){
+        View nativeView=super.onCreateView(inflater,parent,state);
+        if(!androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))return nativeView;
+        android.widget.FrameLayout stage=new android.widget.FrameLayout(requireContext());stage.addView(nativeView);nativeView.setVisibility(View.GONE);
+        com.archos.mediacenter.video.leanback.PreviewSources sources=new com.archos.mediacenter.video.leanback.PreviewSources(requireContext(),mRowsAdapter,mClickListener);stage.addView(sources);
+        com.archos.mediacenter.video.leanback.TopNavigation nav=new com.archos.mediacenter.video.leanback.TopNavigation(requireContext(),stage,tab->{
+            if(tab==4)startActivity(new Intent(requireContext(),com.archos.mediacenter.video.leanback.settings.VideoSettingsActivity.class));else if(tab==5)startActivity(new Intent(requireContext(),com.archos.mediacenter.video.leanback.search.VideoSearchActivity.class));else{Intent home=new Intent(requireContext(),com.archos.mediacenter.video.leanback.MainActivityLeanback.class);home.putExtra("preview_tab",tab);home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);startActivity(home);requireActivity().finish();}
+        },sources::atTop);nav.selectTab(3);return nav;
+    }
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -255,7 +265,7 @@ public class NetworkRootFragment extends BrowseSupportFragment {
     }
 
     private void loadRows() {
-        mRowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
+        if(mRowsAdapter==null)mRowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         setAdapter(mRowsAdapter);
 
         mRowsAdapter.clear();

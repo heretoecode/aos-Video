@@ -1,0 +1,42 @@
+diff --git a/src/com/archos/mediaprovider/video/NetworkAutoRefresh.java b/src/com/archos/mediaprovider/video/NetworkAutoRefresh.java
+index 02000ef..7c5387d 100644
+--- a/src/com/archos/mediaprovider/video/NetworkAutoRefresh.java
++++ b/src/com/archos/mediaprovider/video/NetworkAutoRefresh.java
+@@ -135,7 +135,6 @@ public class NetworkAutoRefresh extends BroadcastReceiver implements DefaultLife
+             if (log.isDebugEnabled()) log.debug("onReceive: skipping rescan : {} period = {} is scanning ? {}", S, pref.getInt(AUTO_RESCAN_PERIOD, 0), String.valueOf(com.archos.mediaprovider.video.NetworkScannerReceiver.isScannerWorking()));
+             return;
+         }
+-        pref.edit().putLong(AUTO_RESCAN_LAST_SCAN, System.currentTimeMillis()).commit();
+         if (log.isDebugEnabled()) log.debug("onReceive: received rescan intent");
+         // Use getRescanUris() which opens a local DatabaseHelper, copies results, and closes:
+         // avoids touching the singleton ShortcutDbAdapter.VIDEO mDb from a background thread.
+@@ -143,7 +142,7 @@ public class NetworkAutoRefresh extends BroadcastReceiver implements DefaultLife
+         for (Uri uri : toUpdate) {
+             if (log.isDebugEnabled()) log.debug("onReceive: add to scan list {}", uri);
+         }
+-        if(NetworkState.isLocalNetworkConnected(context)) {
++        if(NetworkState.isLocalNetworkConnectedOrVpnMobileEnabled(context) || NetworkState.isNetworkConnected(context)) {
+             PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(AUTO_RESCAN_ERROR, 0).commit();//reset error
+             // Resolve the eligible folders AND run their (potentially failing) protocol setup
+             // up front, before the batch is started. This way the whole batch membership is
+@@ -151,6 +150,10 @@ public class NetworkAutoRefresh extends BroadcastReceiver implements DefaultLife
+             // can never be left without a scheduled request (which would strand the batch).
+             List<Uri> eligible = new ArrayList<>();
+             for (Uri uri : toUpdate) {
++                String protocol = uri.getScheme();
++                boolean webdav = "webdav".equalsIgnoreCase(protocol) || "webdavs".equalsIgnoreCase(protocol)
++                        || "dav".equalsIgnoreCase(protocol) || "davs".equalsIgnoreCase(protocol);
++                if (!NetworkState.isLocalNetworkConnectedOrVpnMobileEnabled(context) && !webdav) continue;
+-                if (!ACTION_FORCE_RESCAN_INDEXED_FOLDERS.equals(intent.getAction()) && shouldSkipScanForInactiveServer(context, uri)) {
++                if (!webdav && !ACTION_FORCE_RESCAN_INDEXED_FOLDERS.equals(intent.getAction()) && shouldSkipScanForInactiveServer(context, uri)) {
+                     if (log.isDebugEnabled()) log.debug("onReceive: skip scan for inactive server {}", uri);
+                     continue;
+@@ -212,6 +215,8 @@ public class NetworkAutoRefresh extends BroadcastReceiver implements DefaultLife
+                         if (log.isDebugEnabled()) log.debug("onReceive: queued scan for {} with delay {}ms", uri, delayMs);
+                     }
+ 
++                    if (scanCount > 0) pref.edit().putLong(AUTO_RESCAN_LAST_SCAN, System.currentTimeMillis()).apply();
++
+                     // Do not start AutoScrapeService here: the scans were only just queued and
+                     // have not run yet. Starting now scrapes against the not-yet-updated database
+                     // and runs in parallel with scanning, which also defeats the full-disk

@@ -590,8 +590,11 @@ public class Player implements IPlayerControl,
     public boolean isTorrent(){
         return mIsTorrent;
     }
+    private volatile boolean previewFrameRendered;
+    public boolean hasRenderedPreviewFrame(){return previewFrameRendered;}
     /* TextureView.SurfaceTextureListener */
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        previewFrameRendered=true;
         if (log.isDebugEnabled()) log.debug("CONFIG onSurfaceTextureUpdated");
     }
 
@@ -1022,6 +1025,7 @@ public class Player implements IPlayerControl,
 
     /* IMediaPlayer.Listener */
     public void onPrepared(IMediaPlayer mp) {
+        previewFrameRendered=false;
         mCurrentState = STATE_PREPARED;
         if (mSurfaceController != null)
             mSurfaceController.setMediaPlayer(mMediaPlayer);
@@ -1205,6 +1209,8 @@ public class Player implements IPlayerControl,
     public boolean onInfo(IMediaPlayer mp, int what, int extra) {
         if (log.isDebugEnabled()) log.debug("onInfo: {} {}", what, extra);
         switch(what) {
+        case 3: // Android MEDIA_INFO_VIDEO_RENDERING_START, also forwarded by compatible backends.
+            previewFrameRendered=true;return true;
         case IMediaPlayer.MEDIA_INFO_METADATA_UPDATE:
             if (mIsBusy) {
                 if (log.isDebugEnabled()) log.debug("onInfo: mIsBusy set mUpdateMetadata = true");

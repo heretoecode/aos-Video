@@ -58,6 +58,20 @@ public class ArchosDetailsOverviewRowPresenter extends FullWidthDetailsOverviewR
 
         mViewHolder = (ViewHolder)holder;
         
+        android.widget.TextView footer = holder.view.findViewById(R.id.streaming_footer);
+        android.content.Context context = holder.view.getContext();
+        Object title = ((androidx.leanback.widget.DetailsOverviewRow)item).getItem();
+        boolean streaming = com.archos.mediacenter.video.streaming.StreamingRepository.LINKS_AVAILABLE && !mHideActions && !com.archos.mediacenter.video.player.PrivateMode.isActive()
+            && com.archos.mediacenter.video.streaming.StreamingRepository.prefs(context).getBoolean("streaming_enabled", true)
+            && !com.archos.mediacenter.video.streaming.StreamingRepository.selected(context).isEmpty();
+        if (footer != null) {
+            String scope = title instanceof com.archos.mediacenter.video.browser.adapters.object.Episode
+                ? "Season " + ((com.archos.mediacenter.video.browser.adapters.object.Episode)title).getSeasonNumber() + " · Episode availability unverified"
+                : title instanceof com.archos.mediacenter.video.browser.adapters.object.Tvshow ? "Series-level availability" : "";
+            footer.setText("JustWatch via TMDb · " + com.archos.mediacenter.video.streaming.StreamingRepository.country(context)
+                + (scope.isEmpty() ? "" : " · " + scope));
+            footer.setVisibility(streaming ? View.VISIBLE : View.GONE);
+        }
         updateBackgroundColor(getBackgroundColor());
         updateActionsBackgroundColor(getActionsBackgroundColor());
     }
@@ -128,6 +142,8 @@ public class ArchosDetailsOverviewRowPresenter extends FullWidthDetailsOverviewR
             lpFrame.topMargin = isBanner ? 0
                     : res.getDimensionPixelSize(androidx.leanback.R.dimen.lb_details_v2_blank_height);
             lpFrame.leftMargin = lpFrame.rightMargin = frameMarginStart;
+            lpFrame.height = res.getDimensionPixelSize(androidx.leanback.R.dimen.lb_details_v2_card_height)
+                + (int)(28 * res.getDisplayMetrics().density);
             if (mHideActions) {
                 lpFrame.height = res.getDimensionPixelSize(androidx.leanback.R.dimen.lb_details_v2_card_height)
                         - res.getDimensionPixelSize(androidx.leanback.R.dimen.lb_details_v2_actions_height);

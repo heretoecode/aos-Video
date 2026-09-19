@@ -1,0 +1,17 @@
+<resources>
+    <color name="theme_grid_item_slate">#27374D</color>
+    <color name="theme_background_slate">#172435</color>
+    <color name="theme_header_slate">#101B2A</color>
+    <color name="theme_toolbar_slate">#1D2E43</color>
+    <color name="theme_details_primary_slate">#24364E</color>
+    <color name="theme_details_secondary_slate">#1B2B40</color>
+    <color name="theme_category_selector_slate">#566E91</color>
+    <color name="theme_list_pressed_slate">#627EA5</color>
+    <color name="theme_list_focused_slate">#425D80</color>
+    <color name="theme_gradient_start_slate">#142132</color>
+    <color name="theme_gradient_end_slate">#273C56</color>
+    <color name="theme_rescan_slate">#477980</color>
+    <color name="theme_search_affordance_slate">#6888B0</color>
+    <color name="theme_accent_slate">#9CBCE5</color>
+    <color name="theme_private_mode_slate">#101824</color>
+</resources>

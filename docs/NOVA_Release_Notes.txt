@@ -1,0 +1,405 @@
+NOVA VIDEO PLAYER — MARK'S PREVIEW
+Cumulative release notes — latest release first
+Current release: Preview 4.1.1 / 6.4.63-mark.4.1.1-preview / 6040077
+
+Delivery folder: Nova video player preview (Google Drive)
+Package: org.courville.nova.markpreview — separate from official Nova.
+Update existing Preview with the same signing identity; uninstalling removes app data.
+
+LATEST RELEASE
+
+PREVIEW 4.1.1 — CORRECTIVE SHIELD QA PASS
+Date: 19 September 2026
+Version: 6.4.63-mark.4.1.1-preview / versionCode 6040077
+Authority: Nova_Codex_Handover_2026-09-19_4.1.1_FINAL.zip
+Source: 75cfbf2fb7970912de5660a53c925c5b7ee7d67f
+Build: https://github.com/heretoecode/aos-Video/actions/runs/35451721845
+Package: org.courville.nova.markpreview — existing Preview signing identity; intended install-over 4.1.
+APK: NOVA_Preview_4.1.1.apk
+APK SHA-256: 6849af8484f04e6d4820a02a57ad01e20257ce560169fc8822dd8bb248dee07d
+
+Changes actually included:
+- Clean SUPERNOVA launch/composition surface until Home is ready, with a short fade and no artificial minimum delay. Featured fixed Play/Resume footprint and restrained content transition.
+- One genuine official-title-logo pipeline shared by Featured, Details, loading and HUD. Uses existing TMDb metadata credentials, bounded cached PNGs and readable text fallback. Loading/HUD do not wait for network artwork.
+- Compact Customise Home; Settings Clear Watch Next with confirmation. Existing reorder/hide and non-destructive hidden membership retained.
+- Subtle library List separators; clearer Information/Actions on Details; Add to Row moved into Actions; information layout uses two columns; stale Add to List placeholder removed.
+- Compact Scan Library, neutral dark utility background, transparent Network/Search navigation while scrolling, and corrected actual file-browser list rows/path/focus styling.
+- Automatic-scan startup/interval controls exposed. Only absent values initialise to startup enabled/15 minutes; saved Off/intervals remain. Existing scheduler is re-established and scheduled WebDAV no longer uses the inactive-LAN-server exclusion. Working manual discovery/import engine is retained.
+- Indexed Search folds diacritics/case so Shogun can match Shōgun; episode/title/path matching runs off the UI thread while preserving existing visibility filters.
+- Streaming provider keys hydrate correctly and selections save immediately, including Back. Checkmarks update without dialog recreation. Real availability logo paths are retained. Existing country/provider backend and conditional handoff remain; no invented offers.
+- Settings spacing/help-panel refinement with existing categories/Legacy and saved preferences retained.
+- Concise current Audio/Subtitles labels; centred equal transport controls and corrected 10-second icons; measured compact speed/delay panels and restrained focus; selected options update in place; TV uses Episode ends. PASSED Back/anchor behaviour retained.
+- Refined dark Up Next media overlay; existing countdown/Play Now/Cancel, recap skip and episode progression logic unchanged.
+- Backup exports with an in-progress name, verifies the destination and renames to final ZIP where supported. Portable saved account/configuration preferences join existing library/source/credential/history databases. Reproducible downloaded artwork is excluded and restored in the background; personal/unknown poster/backdrop files retained. Credentials warning and exact preference rollback included.
+- Updated 4.1.1 in-app About notes. Existing preview package/certificate/update path retained; no media database schema change.
+
+Checks actually performed:
+- PASS: signed debug and optimised universal release compilation/APK generation; 33 targeted tests, 0 failures/0 skipped (14.715 seconds test execution); API 28 x86_64 Preview launch/reinstall/restart/warm return, Settings and Home/Movies/TV/Search routes; signed diagnostic-to-release install-over/restart; pinned certificate and four native ABIs; downloaded artifact/APK hashes and ZIP integrity. Existing release lint completed. No physical Shield tests.
+- Actual 4.1-to-4.1.1 user-data upgrade is not emulated; package/certificate match and versionCode increases. Final APK source: 75cfbf2fb7970912de5660a53c925c5b7ee7d67f.
+
+Known limitations / NOT TESTED — USER QA REQUIRED:
+- Physical Shield install-over with the user's database, full D-pad behaviour, populated startup/Featured/logo transitions, playback first-frame/return flashing and device-specific A/V output.
+- Automatic WebDAV with the actual source/preferences, foreground interval/restart/offline recovery and Recently Added. Findings are code-grounded; the persistent Shield failure is not claimed physically verified. Check Settings if an explicit Off value was previously saved.
+- Actual indexed Shōgun/MobLand Search and large-library query responsiveness. Hidden/excluded titles still obey existing filters.
+- Ireland provider availability, empty season responses, real provider apps/browser handoff and account expiry. No confirmed offer is fabricated from a series-level guess.
+- Genuine PNG logo availability; first uncached direct playback uses text. Some optional classic/native/system UI remains, documented in the audit.
+- Real backup/SAF providers and fresh-device restoration, source paths/Android grant renewal, credential/token validity and artwork retry. Backups contain private credentials and are not strongly encrypted. Providers without rename support retain a verified in-progress filename with a manual-rename message.
+- PASSED 4.1 journey/bookmark/Up Next/Back functionality deliberately preserved; must be checked on installed Shield update. No 4.2 features, analytics or unsupported playback functionality added.
+
+Reports: NOVA_CODEX_RETURN_HANDOVER_4.1.1.md; NOVA_UI_AUDIT_REPORT_4.1.1.md.
+Exact Codex allowance/credit information unavailable; no estimate invented.
+No unrelated next pass started.
+
+----------------------------------------------------------------
+
+PREVIEW 4.1 — HOME ROWS, SERIES JOURNEY AND PLAYBACK/EXPORT REMEDIATION
+Date: 19 September 2026
+Version: 6.4.63-mark.4.1-preview / versionCode 6040076
+Authority: Nova_Codex_Handover_2026-09-19_4.1_FINAL.zip
+Source: 12f864a9bf56709afba069a234b22dd765f887d4
+Build: https://github.com/heretoecode/aos-Video/actions/runs/35436554201
+Package: org.courville.nova.markpreview — same Preview signing identity; install over 4.0.
+APK: NOVA_Preview_4.1.apk — optimised universal release.
+APK SHA-256: 2562f755bc45df913f87290dcab76ae0fd07642618b33c2a146f69312e376a15
+
+Changes actually included:
+- SUPERNOVA visible in-app text; unchanged launcher/package. Existing top navigation retained, with Search before Settings and a utility gap.
+- Local-library Featured carousel with Recently Added/Trakt Trending/Popular switches, factual context, two actions and markers. Fixed geometry and offline local fallback.
+- Dedicated Customise Home and Settings row management: reorder/hide all system rows; create/rename/delete custom rows. Watch Next and Add to Row replace the old placeholder; hiding retains membership. Continue Watching dismissal preserves progress.
+- Separate committed TV-series journey from per-file bookmarks. Meaningful viewing threshold: max(60 seconds, min(180 seconds, 10% runtime)); completion/explicit Mark Watched are strong signals. Positive final-episode bookmarks remain resumable; series Details uses the same current episode. Continue Watching titles are suppressed from Recently Added while eligible.
+- Existing periodic local resume checkpoints re-enabled; started-session/error-clock safeguards and playback failure diagnostics. Auto-next updates video ID/Intent consistently; early/manual episode changes do not fabricate completion. Existing native decoder/output engine preserved.
+- Cast/Related row refreshes retain logical focus, with bounded horizontal navigation. Up Next has explicit remote entry and consumes selection key releases to avoid accidental pause/seek.
+- Details hierarchy tightened; action-free full-screen More Info carries full synopsis/cast/technical/file data. Episode-specific metadata preserved. Deep codec/audio pills removed from Main Details.
+- HUD selected Audio/Subtitles labels, episode transport, Speed/Info/More and retained clock/end time. Common anchored playback panels and Back hierarchy. Up Next for existing series/binge playback uses genuine timing where available, otherwise a short fallback; countdown/Play Now/Cancel.
+- Preparing playback wording and episode context; cached artwork/first-frame handoff retained without artificial delay. Composed Details backdrop retained on stop to address one exit-flash cause.
+- Three-panel Settings; language in Appearance; Accent & Colour; obsolete controls in disabled Legacy with saved values/code preserved. Projector Mode dependency investigated and stale false-state alignment reset.
+- Existing local-title Streaming availability/preferences retained, respecting the user's global switch. No provider accounts, guessed quality or remote catalogue.
+- Library controls keep their sizes/poster geometry with more outer spacing; list row separators/tint. Utility gradients and remembered library artwork restoration.
+- Embedded network scan status, modern storage list/folder actions and delete warning. Fresh automatic scan requests reset stale completion acknowledgement; working WebDAV importer unchanged.
+- Library backup stages/verifies a closed non-empty ZIP, validates required entries/CRC and destination readback, and reports/cleans failed newly created output. No full backup redesign.
+
+Checks performed:
+- PASS: signed debug and optimised universal release compiled/generated; 26 targeted tests, 0 failures/0 skipped (13.816 s); API 28 x86_64 Preview startup/reinstall/restart/warm-return and selected Home/Movies/TV/Settings/Search routes; signed debug-to-release install-over and release restart; pinned signature and four native ABIs; downloaded archive/APK hashes and ZIP integrity verified. No physical Shield tests.
+- Release lint: 0 errors; existing/non-fatal warning inventory retained. One earlier new layout-constant lint error was corrected before this build; no check was bypassed.
+- Bounded render/live-emulator review of changed pages. Fixture media/artwork is test-only, not shipped data. No broad regression or physical-device test claims.
+
+Known limitations / NOT TESTED — USER QA REQUIRED:
+- Actual 4.0-to-4.1 Shield install with the user's database; complete remote/keyboard/row/customisation flows and populated-library focus.
+- Physical final-episode/one-episode-series/brief-jump cases, real auto-next and playback-menu Back/focus. A/V desync and unexpected exits were not reproduced; no claim that their hardware cause is solved. Resume safeguards cannot guarantee the unsaved interval after power loss/process death.
+- Real automatic/manual WebDAV/NAS scans, offline recovery, scan activity and Recently Added import timing. Trigger finding/fix is code-grounded, not a confirmed fix against the user's NAS.
+- Real SAF/database export and restore, network/local storage actions/deletion/permissions, provider handoff, subtitle/account services and device-specific Settings.
+- Official title-logo metadata is unavailable in current models, so text fallback is used. Some native/system/specialist UI, feedback and theme styling remains. No invented thumbnails or other unsupported playback features.
+- No 4.2 work, no new recommendation engine, no optional Reset Progress backend. New row memberships use local IDs; replacing/reimporting the library may orphan membership. No media DB schema migration; disposable UI cache rebuilds as v41.
+
+Reports: NOVA_CODEX_RETURN_HANDOVER_4.1.md; NOVA_UI_AUDIT_REPORT_4.1.md.
+Exact Codex allowance/credits were unavailable; no consumption estimate invented.
+No unrelated next pass started.
+
+----------------------------------------------------------------
+
+PREVIEW 4.0 — REMEDIATION, STORAGE LISTS AND UI CONSISTENCY
+Date: 17 September 2026
+Version: 6.4.63-mark.4.0-preview / versionCode 6040075
+Authority: Nova_Codex_Handover_2026-09-17_4.0_FINAL.zip
+Source: 345636900b577bfec90a22d117fe9b6d062b9f2b
+MediaLib: 5758074049bc153ac4967b4ecd21886469270076 + tracked .github/build/medialib-preview40.patch
+Package: org.courville.nova.markpreview — existing Preview signing identity retained.
+Build: https://github.com/heretoecode/aos-Video/actions/runs/35248362010
+APK: NOVA_Preview_4.0.apk — optimised universal release (R8/resource shrinking).
+APK SHA-256: 5b441c1d9c39c527ac130e46aba597ea86d0f25913206a27645488ea2515d4ad
+
+Changes:
+- Corrected reused-activity top-nav routing, source-grid Up boundaries and library first-row header recovery; preserved working Home/episode-row focus.
+- Added visible Cancel/Delete confirmation; physical deletion precedes library removal. Pending/failed permission or deletion is not reported as success; mixed-batch failures are retained.
+- Shared compact Movie/TV table with configurable/reorderable columns, header sorting and separate saved section settings. TV size/count/average use indexed episode media and cached local DB metadata, with incomplete-size handling and no per-file network stat loop.
+- Unified Details hierarchy, episode-specific metadata/rating and inherited genres where appropriate; compact circular cast portraits and separate technical pills. Real provider offers use compact handoff controls; existing Streaming preferences restored.
+- Settings category rail with compact cards, focus-driven content, standard compact preference dialogs, corrected Subtitles placement, dimmed BitTorrent/legacy controls, retained channel-sort controls and informational About attributions. Build information and bundled What's New added; inert Updates placeholder removed.
+- Compact local-library Search, existing Details/Back route and voice key; no Recent Searches or provider-only discovery results.
+- Scan Library entry requests existing local/indexed-network scanners; Settings Full Library Scan also includes network. Configured automatic scan retry/scheduling fixed without rewriting WebDAV importer or enabling scan settings by default.
+- Playback nested-menu parent/focus return, repeated adjustments without premature dismissal, English/preferred subtitles first with Other languages retained, Play from beginning starts playback, and more readable Info. Existing approved HUD/clock/end time/native engine preserved.
+- Stable Home hero geometry and interaction-aware approximately 30-second idle rotation; secondary-screen clock and safe utility-dialog styling.
+
+Checks performed:
+- Final signed debug and optimised universal release compilation/package succeeded. Release lint dependency passed (0 errors; 1,381 warnings retained). R8/resource shrinking enabled.
+- Six targeted Robolectric checks passed: 64-bit TV year; Continue Watching resume/progression; page/focus rendering; Movie Details playback action/rendering; Episode rating/genre/runtime fallback; TV size/count/average and unknown-last sort.
+- API 28 x86_64 emulator: Preview launch, reinstall, restart and warm return; Settings and selected categories; Movies, TV Shows and local Search query. No fatal startup/route exception in captured checks.
+- Signed debug-to-release upgrade with Preview enabled and release restart passed. Signature verified against the existing Preview certificate; four native ABI directories present. APK hash matched downloaded bytes.
+- Bounded visual review: approved 4.0 references versus staged fixtures/live screenshots. Final About labels/logos and non-extract Search reviewed; no extensive screenshot regression suite.
+- Physical Shield playback/network/deletion and populated-library acceptance: NOT TESTED — USER QA REQUIRED.
+
+Known limitations / unfinished presentation:
+- Whole-app visual unification is PARTIAL. Scan GuidedStep configuration, metadata identification, credential manager, subtitle download/wizard, authentication, backup/import/export and classic/mobile alternatives retain native/legacy elements. Exact inventory and reasons are in NOVA_UI_AUDIT_REPORT.md.
+- Translucent Slate approximates frost; no live GPU blur. Fit-inside artwork may letterbox. Missing sizes/HDR are not guessed; incomplete average size is blank. Many optional columns can truncate on a narrow display.
+- Existing provider availability/handoff only: no new account backend, inferred quality or broad streaming discovery. Add to List remains disabled. Season storage breakdown and major engine/upstream changes deferred.
+- First updated launch rebuilds the disposable v40 UI snapshot cache from the existing database. No media database or credential migration; install over existing Preview rather than uninstalling.
+
+NOT TESTED — USER QA REQUIRED:
+- Real Shield upgrade/library startup performance and populated remote navigation.
+- Physical local/WebDAV/SMB/USB deletion, permission denial/cancellation, sidecar/folder cleanup and batch failures.
+- Real list totals/averages, all column/filter/sort combinations and large libraries.
+- Playback, subtitle nested focus/adjustments, restart/resume, HDR/passthrough/refresh-rate/first-frame behaviour.
+- Automatic/offline NAS scans, newly imported titles on Recently Added, Continue Watching progression.
+- Real metadata/artwork/provider handoff, voice search, account login, backup/import/export and all device-specific Settings.
+
+Hand-back: NOVA_CODEX_RETURN_HANDOVER.md
+Audit: NOVA_UI_AUDIT_REPORT.md
+No unrelated next development pass started.
+
+-----------------------------------------------------------------------
+PREVIOUS RELEASE HISTORY — PRESERVED
+
+PREVIEW 3.9 — VISUAL-FIDELITY AND QA REMEDIATION
+Date: 16 September 2026
+Version: 6.4.63-mark.3.9-preview / versionCode 6040074
+Authority: Nova_Codex_Handover_2026-09-16_3.9.zip (complete, superseding handover).
+Source: 3c1e34a62c39b12c52b90e4ab7dc2618ab340bb1
+MediaLib: 5758074049bc153ac4967b4ecd21886469270076
+Package: org.courville.nova.markpreview — existing Preview signing identity retained.
+Build: https://github.com/heretoecode/aos-Video/actions/runs/35138100829
+APK: NOVA_Preview_3.9.apk
+APK SHA-256: 663474c9473f2d60b7f2edc537bbeb2d075672fa1233f2ae2636723bc46bbb02
+
+Changes:
+- Home Featured title/metadata/plot spacing tightened; fixed action positions retained. Top navigation blends into artwork at the top and transitions to a dark Slate surface over scrolled content.
+- Continue Watching uses actual playback recency across movies/series, inherits series progression activity and enters the existing player directly without opening Details. Newly imported titles can move into Recently Added instead of retaining stale shelf order.
+- Movies/TV now share a fixed six-column grid with a fixed 2:3 poster viewport and 30 dp footer. Artwork fits without destructive cropping or image-dependent grid sizing. List rows are compact, with thumbnails and a chevron.
+- Filters/Sort/Order and More use compact icon-led panels, checks for selected values, restrained cyan focus and disabled unavailable options.
+- Unified Details moves genre/studio/rating into the upper hierarchy, uses compact technical pills and reduces lower Source/File and Video/Audio presentation. Existing cast/episode actions remain; Add to List stays a placeholder.
+- Existing movie trailer embed preserved and its header/actions polished. TV trailers use the existing TMDb client and a local cache; Trailer appears only when valid metadata exists.
+- Settings uses compact aligned rows, category icons and a full-width content pane. Eleven legacy UI controls are visibly disabled/skipped by D-pad; underlying preferences and saved values remain. Opening Preview Settings no longer clears decoder/audio-interface/software-decoder choices. Full preference audit is in NOVA_Preview_3.9_Handback.md.
+- Network/source tiles have compact proportions, friendly labels/icons and a foreground focus outline. Network refresh retries after offline/busy startup and respects configured startup/period/source settings. Forced retries can bypass stale inactive-source flags; the working WebDAV importer and scanner deletion safeguards remain.
+- Cached library loading starts earlier and runs off the main thread; live data wins over stale cache delivery. No artificial splash or online-service dependency was added.
+- Playback loading enters immediately and hands off after a native first-frame signal or usable surface evidence, with a bounded fallback and protection against stale callbacks. Preview entry animations/native action bar no longer introduce an unrelated screen.
+- HUD follows authoritative reference 22: unobtrusive title/episode context, existing clock/calculated end time, thin timeline, small transport controls and Audio/Subtitles/More menus backed by existing playback actions. Info uses real current-title metadata.
+
+Checks performed:
+- PASS: signed development APK compiled and generated from the recorded commit.
+- PASS: four quick existing checks (TV date mapping, resume/progression, page/HUD/menu rendering, Movie Details rendering/playback delegation); no failures.
+- PASS: emulator installation, cold start with Preview enabled, same-APK reinstall, restart and warm relaunch.
+- PASS: Settings opened through real top navigation; Home & Discovery category opened; disabled legacy controls remained non-focusable and visually dimmed. No fatal startup/Settings exception in captured logs.
+- PASS: existing Preview signing certificate verified (SHA-256 89ac087ed6f989c90482d4a999f80511fe6ceee26ef1b9c37a142a9f00d39a5a); artifact and APK hashes verified.
+- REVIEWED: staged layout renders and running Settings screenshots against approved references; Movie Details check uses a populated render fixture, not real Shield media.
+- NOT TESTED — USER QA REQUIRED: real-media playback controls/transitions, populated Shield libraries and the device-specific cases below.
+
+Known limitations / exact visual variations:
+- This is a signed development APK, not an optimised performance-release build.
+- Slate translucency approximates frost without live GPU blur. Unusual poster ratios safely letterbox inside fixed cards. Native specialist playback/value/credential dialogs and provider-internal trailer controls retain their working layouts.
+- Unsupported seek thumbnails/chapters/skip controls are not invented. Missing artwork, credits or TV trailers stay absent. Add to List remains disabled; Search redesign and Streaming implementation are outside this pass.
+- Hardware refresh-rate/HDR switching can still blank the display; the loading timeout avoids indefinitely trapping playback controls. Real-device seamlessness is not claimed.
+- Settings audit is code-based, not confirmation that every setting was tested. Existing platform capability checks/hiding remain. No analytics or telemetry added.
+
+NOT TESTED — USER QA REQUIRED:
+- Shield upgrade from 3.8 with the real library; cached startup performance and long/localised text.
+- D-pad paths, focus restoration, Network focus, scrolled navigation, artwork proportions and all filter combinations.
+- Continue Watching reordering only after playback, series progression, newly imported network titles on Recently Added.
+- Automatic WebDAV/NAS scans, periodic/connectivity recovery and preservation of entries when offline.
+- Real Movie/TV Details, cast/trailers, playback transition, audio/subtitle selection, seek, Back, auto-hide, end-time display and device-specific output/decoder modes.
+- Broad regression, all titles/protocol combinations and release optimisation are deferred to user QA/later milestones.
+
+Full hand-back, visual limitations and Settings audit: NOVA_Preview_3.9_Handback.md in Handovers.
+
+----------------------------------------------------------------
+
+PREVIEW 3.8 — SHIELD REMEDIATION AND INITIAL PLAYBACK HUD
+Version: 6.4.63-mark.3.8-preview / 6040073
+Authority: Nova_Codex_Handover_2026-09-16_1630.zip (newest Drive handover).
+Source: 84250339b1fa86673e556596d1bfe701f8a454ec
+Package: org.courville.nova.markpreview — existing separate Preview identity and signing key retained.
+
+Changes:
+- Startup: Slate launch/entry window replaces the black launcher surface, snapshot reading begins earlier, and snapshot writes run off the loader's delivery path. Home keeps its shell while data arrives, with cached content retained during refresh. No artificial splash delay or new dependency on online discovery.
+- Shared focus: off-screen Recycler targets receive focus after layout on the same D-pad input; non-interactive shelf headings are skipped. Card outlines derive from actual focus state; file/source and cast focus use stateful cyan surfaces. Horizontal episode boundaries retain focus within the current season; Up/Down changes rows.
+- Continue Watching activates Play/Resume directly through the existing playback action. Long-press retains Details access. Working TV progression and Home-only Continue Watching remain.
+- Home spacing is tighter. Discovery shelves now bind available series backdrops as well as movie/episode artwork; portrait-only fallbacks remain uncropped.
+- Movies/TV cards use a fixed compact footer, one-line ellipsised title and smaller secondary line. List rows retain compact geometry and gain a right-side chevron. Existing filter/sort/order/view memory is preserved.
+- Library background follows the focused title, with a 160 ms debounce and short crossfade. The previous backdrop stays visible while replacement artwork loads; portrait-shaped images are rejected as full-page backdrops.
+- Filter/Sort/Order and More panels size to their actual content, cap long lists, and use translucent Slate surfaces, cyan focus and selection checkmarks. More actions are grouped into playback/navigation, library and destructive sections. File-browser sorting uses the same compact treatment.
+- Settings bypass the nested narrow Leanback pane: a full-width screen contains the internal category rail and remaining-width settings pane. Selecting a category displays its original preferences and handlers. Remember library view preferences stays under Library.
+- Details parse stored audio-track JSON into human-readable format/channel labels; raw structured values are omitted. Lower information uses compact stacked sections and shortened filenames. Full file/subtitle/artwork tools remain available through More. Add to List is a disabled Coming soon placeholder only.
+- Cast portraits load progressively from Nova's existing TMDb client and image cache, matching actual title credits. Cached mappings are reused; genuinely unavailable portraits use a neutral silhouette. No separate metadata provider was introduced.
+- Trailer opens the selected supported primary trailer directly in a hardware-accelerated, explicitly sized video pane. The stock intermediate dialogue is removed from normal use; Back/Close destroys the WebView and restores the prior focus. Open YouTube remains the fallback.
+- Network/file presentation retains working source adapters and protocol handlers. Scanning text reflects real local/network scanner state in the existing single pill. Enabled automatic rescans are retried after network connectivity returns, with a debounce and throttle; existing scanner coalescing, incremental work and unavailable-share protections remain.
+- Playback preparation remains visible until the surface has a buffer/rendered-frame signal, then fades away. Decoder start is not delayed. A bounded fallback releases the overlay if the device supplies no frame signal.
+- Initial playback HUD: no ActionBar during Preview playback, title top-left, current/estimated end time top-right where available, smaller bottom controls and translucent native option cards. Existing transport/seek, aspect, audio/subtitle/chapter/info and contextual capabilities are retained through Nova's existing handlers and options menu. No decoder or hardware-playback rewrite.
+
+Known limitations / not implemented:
+- This is the initial HUD/control presentation, not a complete replacement of every native playback sub-dialogue. New seek thumbnails, new skip detection and unsupported controls were not added.
+- First-frame signalling is device/backend-dependent. After eight seconds without a usable signal the overlay releases to preserve access to playback controls; Shield refresh-rate switching and actual transitions need device QA.
+- Trailer embedding/autoplay remains subject to YouTube/WebView restrictions; no provider restriction is bypassed.
+- Automatic network scanning still honours the existing auto-rescan setting and eligible indexed folders. When automatic rescan is disabled, this build does not silently enable it or introduce server push notifications/new scan schedules.
+- Startup improvements are proportionate scheduling/cache/window changes; instant large-library cold startup has not been benchmarked or guaranteed.
+- Long TV secondary metadata truncates to keep the compact fixed footer. Missing or unreliable metadata is omitted.
+- Search redesign, Add to List backend, Streaming/JustWatch, new Trakt features, network Phase 2, analytics and telemetry are out of scope and were not added.
+
+NOT TESTED — USER QA REQUIRED:
+Physical Shield cold/warm launch with the real library; every off-screen focus path and Details Back restoration; playback HUD/remote and hardware decoding; first-frame/refresh-rate transition; trailer video and Back; progressive cast portraits; TV season boundaries and Continue Watching; large libraries, offline/reconnecting WebDAV/SMB and natural rescan detection. Minimum emulator checks do not replace populated-library or real-device acceptance.
+
+MINIMUM BUILD GATE: PASSED (2026-09-16)
+- Compile and signed universal development APK generated successfully.
+- Existing Preview signing identity verified; APK installs and same-APK reinstall retains Preview preference.
+- Cold startup, force-stop restart and warm relaunch passed on API 28 emulator with a 1920 x 1080 landscape panel.
+- Settings opened through navigation without a fatal exception; captured 16:9 layout reviewed: category rail and full remaining-width pane, normal horizontal labels.
+- Two existing quick checks passed: 64-bit TV premiere year and Continue Watching resume/completion progression.
+- No populated-library, physical Shield or actual playback smoke check was performed.
+Build: https://github.com/heretoecode/aos-Video/actions/runs/35119232159
+APK: https://drive.google.com/file/d/12chP3cu7yRm6p-ZsSaLyf6QocZCbXSdx/view
+APK file: NOVA_Preview_3.8.apk (98,571,574 bytes; signed debug/development build)
+SHA-256: 53d2b72f2b673da07aa4c4ce3be4e6b16baf1a235a5eb48600bf694b7ccac254
+
+PREVIOUS RELEASE HISTORY
+
+PREVIEW 3.7 — HOME, LIBRARIES, UNIFIED DETAILS AND FOUNDATIONS
+Version: 6.4.63-mark.3.7-preview / 6040072
+Source: c49e6ee5489145155c9b0c13d20fd4c72bb158b7
+MediaLib: 9823ec2eb689a5225dd0e1d7127856041d5bd395
+Authority: Nova_Codex_Handover_2026-09-16_FINAL.zip (newest Drive handover).
+
+Changes:
+- Top-tab activation retains remote focus on the selected tab. Home Up reveals the hero before entering navigation. Per-tab focus anchors no longer overwrite one another during tab switches; background library updates retain existing title order.
+- Fixed one-line poster titles, lighter metadata blocks, compact list cards and Slate Filters (Genre/Year), Sort and Order menus. Library view preferences are remembered separately for Movies and TV Shows; the new Library setting defaults on.
+- Movies, episodes and TV shows use the cinematic Details presentation, including titles with incomplete metadata. Primary entry focus is Play/Resume. TV seasons/episodes retain real library objects and existing playback/actions. More exposes existing actions and subtitle/artwork tools without switching to the legacy Details page.
+- Focusable Cast & Crew cards, conditional media-information panels and landscape related movies. Trailer chooses a supported primary trailer directly; duplicate trailer/extras rows are removed.
+- TV Continue Watching keeps one series journey, records playback checkpoints independently of the completed file, resumes partial episodes and labels untouched next episodes Up Next without a progress bar. Missing numbered episodes and previously observed missing season-tail episodes are not skipped. TV grid secondary text prioritises active viewing status; otherwise it shows reliable year and local season/episode totals.
+- Landscape Home cards use available landscape artwork, with uncropped portrait fallback. No invented dates, ratings, cast portraits or placeholder media.
+- Cached library snapshots can render while the local database refreshes; discovery remains deferred. Cache writes are serialised and normal startup does not reuse Private Mode snapshots.
+- Network scans run through a single executor; repeated requests coalesce into at most one follow-up. Existing incremental timestamp comparisons, batched database operations and failed-directory deletion protection remain. Existing timing logs are retained; device performance has not been benchmarked.
+- Floating scan pill uses a thinner circular indicator. Playback preparation appears immediately using cached local artwork when available, with no minimum display duration; the old title overlay is suppressed while preparing.
+- Network discovery uses a compact four-column source grid over existing adapters/actions. Folder/file list styling, breadcrumbs and error text are refined without adding protocols or new source-management features.
+- Settings retain existing preference handlers and keys, regrouped into the agreed categories with internal category navigation. Streaming, Integrations and Updates are disabled placeholders.
+- Original Nova launcher/banner artwork retained with a small red CUSTOM ribbon for the Preview build only. Existing package and signing identity retained.
+
+Known limitations / not implemented:
+- The current scraper model has actor names and roles but no portrait URLs. Cast cards use genuine Nova fallback artwork; no new portrait-provider integration was added.
+- Missing series end dates are omitted. Counts describe the local library, not a complete online episode catalogue. Unknown missing episodes that have never existed in the local catalogue cannot be identified reliably.
+- Trailer embedding/autoplay depends on WebView and the trailer provider's permissions. Only supported trailer-labelled YouTube candidates are offered; external YouTube fallback remains available.
+- Scan changes serialise Nova network requests; Android's own system media scanner remains platform-managed. No new parallel network probing or major scanner rewrite was introduced.
+- No Streaming integration, player HUD redesign, source dashboard, analytics or telemetry was added.
+
+NOT TESTED — USER QA REQUIRED:
+Populated Movie/TV/Episode Details and Back restoration; all Shield D-pad routes; remembered filter combinations; series completion/deletion/missing-episode cases; cached large-library startup; offline/reconnecting SMB/WebDAV and other sources; settings behaviour; trailer and actual video playback; launcher ribbon appearance on Shield. Existing quick episode-choice checks do not cover every new journey-persistence case.
+
+MINIMUM BUILD GATE: PASSED
+GitHub Actions: https://github.com/heretoecode/aos-Video/actions/runs/35104836910
+Passed: compilation and APK packaging; two existing targeted unit checks; pinned signing certificate; Preview-enabled API 28 emulator install/startup and same-APK reinstall/restart with retained preferences.
+Smoke check used an empty library; it does not verify populated Details or physical Shield behaviour.
+Package: org.courville.nova.markpreview
+APK SHA-256: 82002f1a8bda858a008910104018f87c9159101ae1f71478a0d8ddea42c6aa6f
+APK size: 98559707 bytes
+Signing certificate SHA-256: 89ac087ed6f989c90482d4a999f80511fe6ceee26ef1b9c37a142a9f00d39a5a
+Install as an update over existing Nova Preview; no uninstall required.
+
+PREVIOUS RELEASES AND HISTORICAL NOTES
+The entries below describe earlier builds and their status at the time. Later release entries supersede earlier limitations and plans where stated.
+
+PREVIEW 3.4 — STARTUP REPAIR CANDIDATE
+Version: 6.4.63-mark.3.4-preview / 6040069
+Source: 66897c5a58f525e6d231d4997cc6c6ff5d298e9c (or final follow-up recorded below)
+- Fixes TV query loader construction on a background thread without an Android Looper.
+- Guards clock receiver cleanup when changing UI modes triggers early activity recreation.
+- Adds worker-thread SQL regression coverage that propagates asynchronous errors.
+- Adds full installed application startup/upgrade checks with Preview preference enabled.
+Build: successful. Final verification outcome appended below.
+Physical Shield testing: outstanding.
+
+PREVIEW 3.3 — DELIVERED, KNOWN NEW-UI CRASH
+Version: 6.4.63-mark.3.3-preview / 6040068
+Source: 1d61c99f23f9a6493d5d475645c0615b9641364b
+- Home Recently played first with larger landscape cards.
+- Recently added groups episodes by show and chooses next to watch retrospectively.
+- Movies/TV continue rows and complete library grids with sort/filter controls.
+- Compact Network & Files page; centred navigation, nearby Search and separate scan status.
+- Poster captions below artwork, focus and artwork loading refinements.
+Verification: compiled, signature checked, 24 selected tests passed.
+Known failure: upgrading with new UI enabled closes immediately; clean classic startup works but enabling new UI crashes. Earlier tests missed full startup and background-thread exceptions. Do not treat this build as stable.
+
+PREVIEW 3.2 — PREVIOUS BASELINE
+- Cinematic Home/cards and partial slate playback controls.
+- Native actions, focus/artwork refinements and isolated Preview installation identity retained.
+Mark reported a preceding new-UI build working; identification as 3.2 is inferred from delivery order, not a new device verification.
+
+EARLIER PERSONAL EDITIONS — HISTORICAL SUMMARY
+- Documentary TV library access and visibility preference; final design has no documentary sidebar entry.
+- Slate theme and brighter text; classic fallback and Try new UI toggle.
+- Direct TMDb TV IDs/URLs and IMDb tt IDs/URLs for manual show matching.
+- Typed settings backup/restore and archive safety improvements.
+- Single About Build entry with personal identity and release notes.
+- Country/provider preference groundwork, targeted responsiveness/security fixes.
+Exact release attribution for every earlier change is not reconstructed here. Custom collections have persistent groundwork but incomplete management UI.
+
+POSTPONED / NOT FINISHED
+Streaming/JustWatch launch integration and precise season/episode offers; settings redesign; collection UI revisit. Full playback HUD, chapter presentation, stats, scan-result counts, Up Next and optional seek thumbnails remain partly or wholly unfinished. Seek thumbnails must default OFF. Preserve existing Nova skip capabilities; do not create duplicate intro/recap/credits detection.
+
+MAINTENANCE
+Place each future build's version/code, commit, changes, tests, known issues and APK hash at the top, immediately after the document header; move the previous release into history. Preserve earlier entries. Update this same Drive text file rather than creating a new unrelated release-note document each time. Do not mark physical-device tests passed until actually verified.
+
+FINAL 3.4 OUTCOME
+Commit f8a007062fe748e16fb058c42efde810846fe0f3. Run 34921633636 passed.
+Classic clean start, Preview cold start/restart and signed diagnostic-to-release upgrade/start/restart passed on API 28 emulator. Pinned certificate verified.
+APK SHA-256: ec249d6ff6026329d67fb236abcf6384249a565ab821c45b3a53f2dd83aad94d
+Physical Shield and populated-library/playback acceptance remain outstanding.
+
+Verification detail: 29 selected tests passed, zero failures/skips. Installed-app checks are process/lifecycle smoke tests with an empty library. Emulator captures still show the interface-size dialog on a portrait surface; unobscured TV layout and physical Shield playback are NOT verified by these captures.
+
+PREVIEW 3.5 — CINEMATIC BROWSING AND MOVIE DETAILS
+Version: 6.4.63-mark.3.5-preview / 6040070
+Source: d175a01553ed19414f783f9adbcaa0b7b42205c9
+- Home, Movies and TV Shows share featured artwork behind transparent navigation with a slate gradient.
+- Home: featured Play/More Info, Continue Watching, grouped next-to-watch Recently Added, Trakt Trending/Popular matched by TMDb ID to local movies/shows, Recently Watched and genre-based recommendations.
+- Movies/TV: conditional Continue Watching, complete grids, list view, dynamic genre/year filters, title/date-added/release or air date and Trakt rank sorting in both directions.
+- Movie details: cinematic header, native playback and More actions, cast names/roles, technical/source details, related library movies and in-app YouTube trailer embeds with an external fallback.
+- Compact cards, aspect-correct backdrop scaling, expandable library headings and AndroidX Back handling.
+- Existing package and signing certificate retained. Network & Files, Settings and player HUD redesign remain postponed.
+Known limitations: Trakt discovery matches the first 200 titles in each public chart/type and caches them for six hours; chart availability depends on Trakt connectivity. Recommendations currently use shared genres. Cast portraits and additional rating providers are not supplied by this version. Trailer embedding depends on the device WebView and the video's embedding permissions; Open YouTube is available as a fallback.
+Device status: Mark confirmed Preview 3.4 startup and basic navigation on Shield in this chat. Preview 3.5 populated-library UI, remote navigation, playback/resume and trailer behaviour still require Shield acceptance.
+
+FINAL 3.5 OUTCOME
+Commit d175a01553ed19414f783f9adbcaa0b7b42205c9. Run 34997480462 passed.
+35 selected tests passed, zero failures/skips. Compilation and lint passed. Classic clean start, Preview cold start/restart, and signed diagnostic-to-release install/start/restart passed on an API 28 emulator. Pinned signing certificate verified.
+Populated-page renders use controlled fixtures and confirm the corrected library heading. Installed-app smoke checks use an empty library on a 1920x1080 landscape emulator. Its phone status bar remains visible; these captures are not full physical-TV visual acceptance. SMB playback, hardware decoding and trailer playback on Shield are not verified by these checks.
+APK SHA-256: af52c417b95bf9b62be26edb071a831dc1b68b393f898fcc7b599cbea5262f79
+APK size: 82216577 bytes.
+Install as an update over the existing Preview installation. Shield UI/playback acceptance remains outstanding.
+
+
+DEVELOPMENT DELIVERY POLICY — 15 SEPTEMBER 2026
+Mark requested faster installable previews and will perform hands-on testing on his Shield while features are being completed.
+Default preview builds now produce one development/debug APK using the existing isolated package and signing identity. Compilation/package checks, certificate verification, Preview-enabled launch, and same-APK reinstall/restart remain. The unit suite, lint, populated screenshot review and release optimisation are deferred to milestones or changes that warrant broader validation.
+Full mode remains available for milestone validation and the optimised release build, including the existing selected regression suite, classic/Preview startup and signed diagnostic-to-release upgrade checks. Development APKs may be larger and have extra logging; their performance is not final-release acceptance.
+Duplicate legacy builds for personal Preview branches are suppressed, superseded Preview runs cancel, and documentation-only changes do not rebuild the APK. Feature/UI changes should be batched before packaging.
+The workflow change was checked for YAML structure, shell syntax and preview/full routing. It has not yet been timed in an end-to-end build. No new APK was built for this workflow-only change; the delivered Preview 3.5 APK and its verification record above are unchanged.
+
+
+PREVIEW 3.6 — SHIELD FIX + POLISH PASS
+Version: 6.4.63-mark.3.6-preview / 6040071
+Source: beb1eda9785c495bffe927c8345a00071d450c48
+Based on the delivered 3.5 UI and Mark's real-device findings; no new redesign.
+
+Changes implemented:
+- Movie Details: cinematic movies no longer request a shared poster transition into a hidden native details row. The destination also skips the native shared-element helper. Native playback/actions and Back handling remain.
+- Home/Movies/TV: preserve the logical cell/control and nested-rail item while updates rebuild content. Restore a nearest remaining item when needed, retain per-tab positions, and contain focus at loaded grid/rail boundaries. Next Featured retains its button focus.
+- Continue Watching is now Home-only; Movies and TV Shows are dedicated libraries.
+- TV premiere timestamps are read as 64-bit dates and converted to years, fixing the overflowing numbers. Unknown dates remain blank. No unverified ongoing/end-year ranges are invented.
+- Movie/TV poster captions follow the new grid reference: lighter consistent panel, two title lines, subtle year, aligned padding and thin blue focus border.
+- Featured title and synopsis reserve two and three lines respectively; text truncates without moving the buttons.
+- Navigation uses a compact translucent focus highlight, restrained blue border, short animation and a separate current-section underline.
+- Scan status floats above content, with friendly saved-source names where available and local/network/protocol fallbacks. Existing scanning/accounting is unchanged.
+- Local Home queries start during view creation; initial resume avoids cancelling/restarting the same query, and chart requests are deferred behind local content. No artificial splash delay.
+- Playback preparation uses cached local backdrops, clean title/episode text and a small Starting playback indicator. The existing playback timing controls visibility; no minimum display duration or new artwork/network fetch.
+- Missing movie trailers are hidden rather than shown as unusable controls.
+
+Scope/limitations:
+- Shield focus paths, populated Movie Details and actual playback/network behaviour: NOT TESTED — USER QA REQUIRED.
+- Cold-start improvement is modest scheduling work; device timings are not benchmarked. No persistent Home snapshot cache or major startup rewrite was added.
+- TV cards show a reliable premiere year only; end-year/ongoing status is not available from the current card metadata.
+- Loading artwork appears only when a local cached backdrop is available; otherwise a clean dark background is used.
+- Streaming, new analytics/telemetry, Settings redesign and unrelated features were not added.
+
+MINIMUM GATE RESULT
+Source: beb1eda9785c495bffe927c8345a00071d450c48
+GitHub Actions run: https://github.com/heretoecode/aos-Video/actions/runs/35043556513
+Passed: Android compilation and APK packaging; two targeted checks (64-bit TV premiere year and Continue Watching episode choice); pinned signature; Preview-enabled emulator install, startup, reinstall and restart.
+APK SHA-256: 832de24b77d2d55d411b382830597c720993fe9e5fd7cf62ca0a4a245a6d5f67
+APK size: 98529193 bytes.
+Package: org.courville.nova.markpreview. Install as an update over existing Preview; no uninstall required.
+Physical Shield, populated Movie Details route, full D-pad paths, playback and source scanning: NOT TESTED — USER QA REQUIRED.
+

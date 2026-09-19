@@ -454,8 +454,8 @@
     <string name="quotation_format">&#x201C;%s&#x201D;&#x2003;</string>
 
     <string name="error_permission">Not enough permissions</string>
-    <string name="error_permission_storage">Nova Video Player needs storage permission to read local videos, please, grant this permission.</string>
-    <string name="error_permission_all_file_access">Nova Video Player needs all external storage management permission to properly manage local videos/NFO files, please, grant this permission.</string>
+    <string name="error_permission_storage">SUPERNOVA Video Player needs storage permission to read local videos, please, grant this permission.</string>
+    <string name="error_permission_all_file_access">SUPERNOVA Video Player needs all external storage management permission to properly manage local videos/NFO files, please, grant this permission.</string>
     <string name="allow">Allow</string>
     <string name="exit">Exit</string>
     <!-- torrent -->
@@ -581,7 +581,7 @@
     <string name="prefer_original_audio_track_summary">Use the track matching the movie or show’s original language when available</string>
     <string name="ui_language_title">Choose user interface language</string>
     <string name="UiLang_title">User interface language</string>
-    <string name="UiLang_summary">Set nova user interface language, pick system to use system default</string>
+    <string name="UiLang_summary">Set SUPERNOVA user interface language, pick system to use system default</string>
     <string name="ui_mode_title">User interface mode</string>
     <string name="ui_mode_summary">Choose between TV and Tablet/Phone UI</string>
     <string name="theme_selection_title">Color theme</string>
@@ -858,7 +858,7 @@
     <string name="trakt_force_push_summary">One-time upload of watched status and resume points to Trakt</string>
     <string name="trakt_force_pull_title">Force re-import from Trakt</string>
     <string name="trakt_force_pull_summary">One-time import of watched status and resume points to Trakt</string>
-    <string name="trakt_sync_collection_summary">Automatically add all videos from your Nova library to your Trakt collection</string>
+    <string name="trakt_sync_collection_summary">Automatically add all videos from your SUPERNOVA library to your Trakt collection</string>
     <string name="trakt_toast_syncing">Syncing with Trakt&#8230;</string>
     <string name="trakt_device_auth_step1">1. On your phone or computer, go to:</string>
     <string name="trakt_device_auth_step2">2. Enter this code:</string>
@@ -953,7 +953,7 @@
     <string name="scheduled_rescan_time">Re-scan time</string>
     <string name="rescan_when_opening_application">Re-scan when opening the application</string>
     <string name="last_rescan_occured">Last re-scan occurred:</string>
-    <string name="error_permission_display_over_apps">Window mode needs special permissions to be displayed in front of other apps. Please, grant Nova Video Player this permission to switch to window mode.</string>
+    <string name="error_permission_display_over_apps">Window mode needs special permissions to be displayed in front of other apps. Please, grant SUPERNOVA Video Player this permission to switch to window mode.</string>
 
 
     <string name="drawer_open">draweropen</string>
@@ -963,7 +963,7 @@
     <string name="rescrap_in_progress">Rescraping whole library</string>
     <string name="rescrap_movies_in_progress">Rescraping all movies</string>
     <string name="rescrap_collections_in_progress">Rescraping all collections</string>
-    <string name="acquire_external_usb_permission">Nova Video needs special permission to access external storage. Please select your storage on next screen</string>
+    <string name="acquire_external_usb_permission">SUPERNOVA Video needs special permission to access external storage. Please select your storage on next screen</string>
 
     <string name="rescrap_not_found">Rescrape videos without description</string>
     <string name="rescrap_all_title">Rescrape all</string>
@@ -1003,7 +1003,7 @@
     <string name="sleep_timer_description">Stop video after: </string>
     <string name="picture_in_picture">Picture in picture</string>
     <string name="cast">Cast</string>
-    <string name="cast_audio_background">Sound won\'t work while Nova Video Player is in background</string>
+    <string name="cast_audio_background">Sound won\'t work while SUPERNOVA Video Player is in background</string>
     <string name="help_faq">Help / FAQ</string>
     <string name="provider_folders">Cloud</string>
     <string name="rate_us">If you like this app, please support us by rating us 5 stars</string>
@@ -1036,7 +1036,7 @@
         It is strongly advised to restart from a clean install to avoid problems. Please check FAQ for details.</string>
 
     <string name="external_player_service_title">External player playback</string>
-    <string name="external_player_service_description">Nova Video Player provides content for an external player</string>
+    <string name="external_player_service_description">SUPERNOVA Video Player provides content for an external player</string>
     <string name="stop">Stop</string>
 
     <string name="s_visual_impaired">visual impaired</string>

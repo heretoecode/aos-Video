@@ -86,7 +86,8 @@ public class Delete {
     private MetaFile2 currentVideoFileToDelete;
     private long currentVideoFileToDeleteSize;
 
-    private Integer counter = 0; // only for video files not for associated files
+    private int counter = 0;
+    private Uri firstFailure; // only for video files not for associated files
 
     public long getCurrentVideoFileToDeleteSize() {
         return currentVideoFileToDeleteSize;
@@ -108,65 +109,19 @@ public class Delete {
         if (deletedFileSize > 0) {
             this.currentVideoFileToDeleteSize = deletedFileSize;
         }
-        if (!isSuccess) {
-            if (mListener != null) {
-                mHandler.post(() -> {
-                    mListener.onDeleteVideoFailed(uris.get(0));
-                });
+        // The system callback is a permission result, not proof that every file vanished.
+        new Thread(() -> {
+            for (Uri uri : uris) {
+                boolean removed = isSuccess && (!isLocal(uri) || !new File(uri.getPath()).exists());
+                if (operationKind == OP_FOLDER) {
+                    if (removed) deleteFolderOK(uri);
+                    else mHandler.post(() -> { if (mListener != null) mListener.onDeleteVideoFailed(uri); });
+                } else if (removed) {
+                    if (isLocal(uri)) cleanupDeletedLocal(uri);
+                    deleteOK(uri);
+                } else deleteNOK(uri);
             }
-            return;
-        }
-
-        if (operationKind == OP_FOLDER) {
-            deleteFolderOK(uris.get(0));
-            return;
-        }
-
-        if (operationKind == OP_MULTIPLE_FILES || uris.size() > 1) {
-            if (mListener != null) {
-                mHandler.post(() -> {
-                    if (log.isDebugEnabled()) log.debug("completeSystemDelete: multiple files deleted successfully");
-                    mListener.onDeleteSuccess();
-                });
-            }
-            return;
-        }
-
-        final Uri fileUri = uris.get(0);
-        if (mListener != null) {
-            new Thread(() -> {
-                if (isLocal(fileUri)) {
-                    if (log.isDebugEnabled()) log.debug("completeSystemDelete: local file/folder trying to delete if directory");
-                    LocalStorageFileEditor editor = new LocalStorageFileEditor(fileUri, mContext);
-                    editor.deleteDir(fileUri);
-                }
-
-                if (isLocal(fileUri) &&
-                        !LocalStorageFileEditor.checkIfShouldNotTouchFolder(FileUtils.getParentUrl(fileUri))) {
-                    long shouldIDelete = getFolderSizeAndStopOnMax(FileUtils.getParentUrl(fileUri), MAX_FOLDER_SIZE, 0, 0);
-                    if ((currentVideoFileToDeleteSize > MIN_FILE_SIZE || shouldIDelete == 0) && MAX_FOLDER_SIZE > shouldIDelete && shouldIDelete >= 0) {
-                        mHandler.post(() -> {
-                            if (log.isDebugEnabled()) log.debug("completeSystemDelete onVideoFileRemoved ask for folder removal {}", fileUri);
-                            mListener.onVideoFileRemoved(fileUri, true, FileUtils.getParentUrl(fileUri));
-                        });
-                    } else {
-                        mHandler.post(() -> {
-                            if (log.isDebugEnabled()) log.debug("completeSystemDelete onVideoFileRemoved {}", fileUri);
-                            mListener.onVideoFileRemoved(fileUri, false, null);
-                        });
-                    }
-                } else {
-                    mHandler.post(() -> {
-                        if (log.isDebugEnabled()) log.debug("completeSystemDelete onVideoFileRemoved {}", fileUri);
-                        mListener.onVideoFileRemoved(fileUri, false, null);
-                    });
-                }
-                mHandler.post(() -> {
-                    if (log.isDebugEnabled()) log.debug("completeSystemDelete onDeleteSuccess {}", fileUri);
-                    mListener.onDeleteSuccess();
-                });
-            }).start();
-        }
+        }, "Nova-delete-cleanup").start();
     }
 
     public void deleteOK(List<Uri> fileUris) { // flush backlog
@@ -175,10 +130,11 @@ public class Delete {
             deleteOK(uri);
     }
 
-    public void deleteOK(Uri fileUri) {
+    public synchronized void deleteOK(Uri fileUri) {
         counter--;
         if (log.isDebugEnabled()) log.debug("deleteOK: {} counter {}", fileUri, counter);
-        if (counter <= 0) {
+        if (counter == 0) {
+            if (firstFailure != null) { Uri failed=firstFailure; mHandler.post(() -> { if(mListener!=null)mListener.onDeleteVideoFailed(failed); }); return; }
             // sometimes we will want to delete parent folder, when empty or only filled with little files like subtitles or nfo
             // then, ask the user
             if (mListener != null) {
@@ -223,7 +179,8 @@ public class Delete {
             deleteNOK(uri);
     }
 
-    public void deleteNOK(Uri fileUri) {
+    public synchronized void deleteNOK(Uri fileUri) {
+        if (firstFailure == null) firstFailure = fileUri;
         counter--;
         if (log.isDebugEnabled()) log.debug("deleteNOK: {} counter {}", fileUri, counter);
         if (counter == 0) {
@@ -252,7 +209,7 @@ public class Delete {
         new Thread(){
             public void run() {
                 if (toDelete != null) {
-                    counter += toDelete.size(); // this is not the number of files but block of files to process
+                    synchronized(Delete.this) { counter = toDelete.size(); firstFailure = null; }
                     if (log.isDebugEnabled()) log.debug("startMultipleDeleteProcess: counter {}", counter);
                     Boolean allUrisLocal = true;
                     List<Uri> toDeleteLocal = new ArrayList<>();
@@ -260,15 +217,9 @@ public class Delete {
                         final Uri fileUri = toDeleteUri;
                         if (!isLocal(fileUri)) {
                             allUrisLocal = false;
-                            NetworkScanner.removeVideos(mContext, fileUri);
                             // delete file
                             deleteFileAndAssociatedFiles(mContext, fileUri);
                         } else {
-                            // sending intent to unindex the file
-                            @SuppressWarnings("deprecation") // ACTION_MEDIA_SCANNER_SCAN_FILE as internal IPC (setPackage targets Nova's own receiver only)
-                            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(VideoUtils.getMediaLibCompatibleFilepathFromUri(fileUri)));
-                            intent.setPackage(ArchosUtils.getGlobalContext().getPackageName());
-                            mContext.sendBroadcast(intent);
                             toDeleteLocal.add(fileUri);
                         }
                     }
@@ -322,7 +273,7 @@ public class Delete {
 
     public void startDeleteProcess(final Uri fileUri){
         if (log.isDebugEnabled()) log.debug("startDeleteProcess: {}", fileUri);
-        counter = 1; // one fileUri
+        synchronized(this) { counter = 1; firstFailure = null; } // one fileUri
         new Thread(){
             public void run(){
                 currentVideoFileToDeleteSize = 0;
@@ -331,14 +282,6 @@ public class Delete {
                 try {
                     currentVideoFileToDelete = MetaFileFactoryWithUpnp.getMetaFileForUrl(fileUri);
                 } catch (Exception e) { }
-                //sending intent to unindex the file
-                if (isLocal(fileUri)) {
-                    @SuppressWarnings("deprecation") // ACTION_MEDIA_SCANNER_SCAN_FILE as internal IPC (setPackage targets Nova's own receiver only)
-                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,Uri.parse(VideoUtils.getMediaLibCompatibleFilepathFromUri(fileUri)));
-                    intent.setPackage(ArchosUtils.getGlobalContext().getPackageName());
-                    mContext.sendBroadcast(intent);
-                } else
-                    NetworkScanner.removeVideos(mContext, fileUri);
                 if (currentVideoFileToDelete==null) {
                     deleteNOK(fileUri);
                     return;
@@ -366,20 +309,14 @@ public class Delete {
                     if (log.isDebugEnabled()) log.debug("deleteFileAndAssociatedFiles: counter {}", counter);
                     // Delete found associated files
                     for (Uri uri : allFiles) {
-                        FileEditor editor = FileEditorFactory.getFileEditorForUrl(uri, context);
-                        // delete feedback provided through boolean or exception handling
-                        Boolean isLocaleFile = editor instanceof LocalStorageFileEditor;
                         try {
-                            if (isLocaleFile) //delete from database
-                                isDeleteOK = ((LocalStorageFileEditor) editor).deleteFileAndDatabase(context);
-                            else {
-                                NetworkScanner.removeVideos(context, uri);
-                                isDeleteOK = editor.delete();
-                                if (isDeleteOK == null)
-                                    isDeleteOK = true; // smb and other editors are returning null otherwise throws exception
+                            isDeleteOK = deletePhysicalFile(context, uri);
+                            if (uri.equals(fileUri)) {
+                                // null means Android's permission UI owns completion; do not
+                                // delete sidecars or announce success before its result arrives.
+                                if (isDeleteOK == null) return;
+                                if (!isDeleteOK) { deleteNOK(fileUri); return; }
                             }
-                            // ok only on main video file and if we have feedback already
-                            if (isDeleteOK != null && uri == fileUri) deleteOK(fileUri);
                             if (log.isDebugEnabled()) log.debug("deleteFileAndAssociatedFiles: delete achieved {}, counter {}", uri, counter);
                         } catch (Exception e) {
                             log.error("deleteFileAndAssociatedFiles: failed to delete file {}, counter {}", uri, counter, e);
@@ -389,10 +326,8 @@ public class Delete {
                                 return;
                             }
                         }
-                        if (!isLocaleFile) { // no deferred feedback
-                            if (log.isDebugEnabled()) log.debug("deleteFileAndAssociatedFiles: no localeFile counter {}", counter);
-                        }
                     }
+                    deleteOK(fileUri);
                     //delete subs
                     if (!FileUtils.isSlowRemote(fileUri)) {
                         SubtitleManager.deleteAssociatedSubs(fileUri, context);
@@ -403,73 +338,67 @@ public class Delete {
         }
     }
 
-    public void deleteLocalFilesAndAssociatedFiles(Context context, List<Uri> fileUris) {
-        if (log.isDebugEnabled()) log.debug("deleteLocalFilesAndAssociatedFiles: {}", fileUris);
-        new Thread() {
-            public void run() {
-                Boolean isDeleteOK;
-                // TODO if directory do not get associate files....
-                // Get list of all files (video and associated)
-                List<Uri> associatedFiles = new ArrayList<>();
-                for (Uri uri : fileUris) {
-                    associatedFiles.addAll(getAssociatedFiles(uri));
-                }
-                if (log.isDebugEnabled()) log.debug("deleteLocalFilesAndAssociatedFiles: counter {}", counter);
-                // Delete found associated files
-                for (Uri uri : associatedFiles) {
-                    LocalStorageFileEditor editor = new LocalStorageFileEditor(uri, context);
-                    // delete feedback provided through boolean or exception handling
-                    try {
-                        isDeleteOK = editor.deleteFileAndDatabase(context);
-                        // ok only on main video file and if we have feedback already
-                        if (log.isDebugEnabled()) log.debug("deleteLocalFilesAndAssociatedFiles: delete achieved {}, counter {}", uri, counter);
-                    } catch (Exception e) {
-                        log.error("deleteLocalFilesAndAssociatedFiles: failed to delete file {}, counter {}", uri, counter, e);
-                    }
-                }
+    /** Preserve the native FileCore/Android permission flow, but commit library removal
+     * only after the physical delete succeeds. FileCore's remote null return means
+     * success; its local null return means a pending system permission request. */
+    private Boolean deletePhysicalFile(Context context, Uri uri) throws Exception {
+        FileEditor editor = FileEditorFactory.getFileEditorForUrl(uri, context);
+        Boolean result = editor.delete();
+        if (editor instanceof LocalStorageFileEditor) {
+            if (result == null) return null;
+            if (!result || new File(uri.getPath()).exists()) return false;
+            ((LocalStorageFileEditor) editor).deleteFromDatabase(uri);
+            notifyLocalDeleted(uri);
+        } else {
+            if (Boolean.FALSE.equals(result)) return false;
+            NetworkScanner.removeVideos(context, uri);
+        }
+        return true;
+    }
 
-                List<Uri> contentUrisToDelete = new ArrayList<>();
-                Uri contentUri;
-                for (Uri uri : fileUris) { // handle the video files separately
-                    // start with deleting all the files from dataBase
-                    LocalStorageFileEditor editor = new LocalStorageFileEditor(uri, context);
-                    editor.deleteFromDatabase(uri);
-                    contentUri = FileUtilsQ.getContentUri(uri);
-                    if (log.isDebugEnabled()) log.debug("deleteLocalFilesAndAssociatedFiles: video to be batch processed: {} -> contentUri {}", uri, contentUri);
-                    // if contentUri is null file has already been deleted before...
-                    if (contentUri != null) contentUrisToDelete.add(contentUri);
-                    else deleteOK(uri);
-                    // delete subs too
-                    if (!FileUtils.isSlowRemote(uri)) {
-                        SubtitleManager.deleteAssociatedSubs(uri, context);
-                        XmlDb.deleteAssociatedResumeDatabase(uri);
-                    }
-                }
-                if (log.isDebugEnabled()) log.debug("deleteLocalFilesAndAssociatedFiles: contentUrisToDelete {}", contentUrisToDelete);
-                if (! contentUrisToDelete.isEmpty()) {
-                    if (Build.VERSION.SDK_INT > 29) {
-                        if (log.isDebugEnabled()) log.debug("deleteFile: delete failed -> going the Q way");
-                        // isDeleteOK can be null since UI involved in Android Q+
-                        isDeleteOK = FileUtilsQ.deleteAll(FileUtilsQ.getDeleteLauncher(), contentUrisToDelete);
-                        if (isDeleteOK != null && !isDeleteOK)
-                            deleteNOK(contentUrisToDelete);
-                        else deleteOK(contentUrisToDelete);
-                    } else {
-                        if (log.isDebugEnabled()) log.debug("deleteFile: delete failed -> going the traditional way");
-                        for (Uri uri : fileUris) { // handle the video files separately
-                            File fileToDelete = new File(uri.getPath());
-                            ExternalSDFileWriter external = new ExternalSDFileWriter(mContext.getContentResolver(), fileToDelete);
-                            try {
-                                if (!external.delete()) deleteNOK(uri);
-                                else deleteOK(uri);
-                            } catch (IOException ioe) {
-                                deleteNOK(uri);
-                            }
-                        }
-                    }
-                }
+    private void notifyLocalDeleted(Uri uri) {
+        @SuppressWarnings("deprecation")
+        Intent scan = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                Uri.parse(VideoUtils.getMediaLibCompatibleFilepathFromUri(uri)));
+        scan.setPackage(mContext.getPackageName());
+        mContext.sendBroadcast(scan);
+    }
+
+    private void cleanupDeletedLocal(Uri uri) {
+        if (new File(uri.getPath()).exists()) return;
+        notifyLocalDeleted(uri);
+        for (Uri associated : getAssociatedFiles(uri)) {
+            try { deletePhysicalFile(mContext, associated); }
+            catch (Exception unavailable) { log.debug("Optional sidecar cleanup unavailable", unavailable); }
+        }
+        SubtitleManager.deleteAssociatedSubs(uri, mContext);
+        XmlDb.deleteAssociatedResumeDatabase(uri);
+    }
+
+    public void deleteLocalFilesAndAssociatedFiles(Context context, List<Uri> fileUris) {
+        new Thread(() -> {
+            List<Uri> contentUris = new ArrayList<>();
+            List<Uri> deferredFiles = new ArrayList<>();
+            for (Uri uri : fileUris) {
+                Uri content = Build.VERSION.SDK_INT > 29 ? FileUtilsQ.getContentUri(uri) : null;
+                if (content != null) { contentUris.add(content); deferredFiles.add(uri); continue; }
+                try {
+                    Boolean result = deletePhysicalFile(context, uri);
+                    if (Boolean.TRUE.equals(result)) { cleanupDeletedLocal(uri); deleteOK(uri); }
+                    else if (Boolean.FALSE.equals(result)) deleteNOK(uri);
+                } catch (Exception failure) { deleteNOK(uri); }
             }
-        }.start();
+            if (!contentUris.isEmpty()) {
+                try {
+                    Boolean result = FileUtilsQ.deleteAll(FileUtilsQ.getDeleteLauncher(), contentUris);
+                    if (result == null) return; // system result calls completeSystemDelete
+                    for (Uri uri : deferredFiles) {
+                        if (result && !new File(uri.getPath()).exists()) { cleanupDeletedLocal(uri); deleteOK(uri); }
+                        else deleteNOK(uri);
+                    }
+                } catch (Exception failure) { deleteNOK(deferredFiles); }
+            }
+        }, "Nova-delete-local").start();
     }
 
     public void deleteFolder(final Uri uri){
@@ -477,9 +406,14 @@ public class Delete {
         new Thread(){
             public void run() {
                 try {
-                    FileEditorFactory.getFileEditorForUrl(uri, mContext).delete();
-                } catch (Exception e) { }
-                deleteFolderOK(uri);
+                    FileEditor editor = FileEditorFactory.getFileEditorForUrl(uri, mContext);
+                    Boolean result = editor.delete();
+                    if (result == null && editor instanceof LocalStorageFileEditor) return;
+                    if (Boolean.FALSE.equals(result)) throw new IOException("Folder deletion failed");
+                    deleteFolderOK(uri);
+                } catch (Exception e) {
+                    mHandler.post(() -> { if (mListener != null) mListener.onDeleteVideoFailed(uri); });
+                }
             }
         }.start();
     }

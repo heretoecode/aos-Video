@@ -235,6 +235,7 @@ public class FtpServerCredentialsDialog extends DialogFragment {
             }});
         mDialog = builder.create();
 
+        mDialog.setOnShowListener(ignored -> com.archos.mediacenter.video.leanback.PreviewDialog.styleNative(mDialog));
         return mDialog;
 
     }

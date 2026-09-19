@@ -1,0 +1,24 @@
+{
+  "version": "6.4.63-mark.4.1-preview",
+  "versionCode": 6040076,
+  "package": "org.courville.nova.markpreview",
+  "source_commit": "12f864a9bf56709afba069a234b22dd765f887d4",
+  "build_url": "https://github.com/heretoecode/aos-Video/actions/runs/35436554201",
+  "apk_filename": "NOVA_Preview_4.1.apk",
+  "apk_bytes": 82305201,
+  "apk_sha256": "2562f755bc45df913f87290dcab76ae0fd07642618b33c2a146f69312e376a15",
+  "certificate_sha256": "89ac087ed6f989c90482d4a999f80511fe6ceee26ef1b9c37a142a9f00d39a5a",
+  "native_abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+  ],
+  "test_summary": {
+    "tests": "26",
+    "failures": "0",
+    "skipped": "0",
+    "duration": "13.816s"
+  },
+  "apk_drive_url": "https://drive.google.com/file/d/1Dk4rNNgVeHTQQ0woVV-5YUahIYDKfqky/view"
+}

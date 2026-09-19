@@ -645,6 +645,11 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
                 //.penaltyDeath()
                 .build());
         */
+        // Apply the agreed theme once when upgrading the previous personal build.
+        SharedPreferences markPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (!markPrefs.getBoolean("mark_slate_applied", false)) {
+            markPrefs.edit().putString("app_theme", "slate").putBoolean("mark_slate_applied", true).apply();
+        }
         AndroidThreeTen.init(this);
 
         if (BuildConfig.DEBUG) {
@@ -675,6 +680,7 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
 
         // init application context to make it available to all static methods
         mContext = getApplicationContext();
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("try_new_ui",false))com.archos.mediacenter.video.leanback.PreviewLibraryLoader.warmCache(this);
         // must be done after context is available
         log = LoggerFactory.getLogger(CustomApplication.class);
         configureFullLoggingAsync();
@@ -751,7 +757,7 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
         //        getResources().getDimensionPixelSize(R.dimen.details_poster_width),
         //        getResources().getDimensionPixelSize(R.dimen.details_poster_height));
 
-        BASEDIR = Environment.getExternalStorageDirectory().getPath()+"Android/data/"+getPackageName();
+        BASEDIR = new File(getCacheDir(), "legacy-images").getAbsolutePath();
 
         // handles NetworkState changes
         networkState = NetworkState.instance(mContext);
@@ -760,6 +766,7 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
                 if (evt.getOldValue() != evt.getNewValue()) {
                     if (log.isTraceEnabled()) log.trace("NetworkState for {} changed:{} -> {}", evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
                     launchSambaDiscovery();
+                    requestPreviewNetworkRefresh();
                 }
             };
 
@@ -792,7 +799,9 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
                 new FileSystemPersistence(BASEDIR));
 
         // NetworkAutoRefresh.init requires main thread (LifecycleRegistry.addObserver)
+        com.archos.mediacenter.video.leanback.PreviewAutoScanPolicy.initialise(this);
         NetworkAutoRefresh.init(this);
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(previewScanPreferences);
 
         // Defer heavy initialization to a background thread to speed up cold start
         final Context appContext = mContext;
@@ -955,6 +964,8 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
                 isNetworkStateRegistered = true;
             }
             addNetworkListener();
+            requestPreviewNetworkRefresh();
+            com.archos.mediacenter.video.utils.MigrationBackup.resumeArtwork(this);
             launchSambaDiscovery();
             // Trigger an incremental Trakt sync when returning to foreground if signed in and not in private mode
             if (Trakt.isTraktV2Enabled(this, PreferenceManager.getDefaultSharedPreferences(this))) {
@@ -978,6 +989,7 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
                 isNetworkStateRegistered = false;
             }
             removeNetworkListener();
+            previewRefreshHandler.removeCallbacks(previewRefresh);
         }
     }
 
@@ -1183,6 +1195,25 @@ public class CustomApplication extends Application implements DefaultLifecycleOb
     public static void setSupportedRefreshRates(String refreshRates) {
         supportedRefreshRates = refreshRates;
     }
+
+    private long previewRefreshAt, previewRefreshRequestedWallTime;
+    private final SharedPreferences.OnSharedPreferenceChangeListener previewScanPreferences=(prefs,key)->{if("auto_rescan_on_app_restart".equals(key)||NetworkAutoRefresh.AUTO_RESCAN_PERIOD.equals(key))requestPreviewNetworkRefresh();};
+    private boolean previewScanOnReturn;
+    private final android.os.Handler previewRefreshHandler=new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable previewRefresh=new Runnable(){public void run(){
+        SharedPreferences prefs=PreferenceManager.getDefaultSharedPreferences(CustomApplication.this);
+        if(!isForeground||!prefs.getBoolean("try_new_ui",false))return;
+        long now=System.currentTimeMillis(),period=NetworkAutoRefresh.getRescanPeriod(CustomApplication.this);
+        if(previewScanOnReturn&&previewRefreshRequestedWallTime>0&&prefs.getLong(NetworkAutoRefresh.AUTO_RESCAN_LAST_SCAN,0)>=previewRefreshRequestedWallTime)previewScanOnReturn=false;
+        android.util.Log.d("SupernovaScan","foreground due-check: startup="+previewScanOnReturn+" periodMs="+period+" lastScan="+prefs.getLong(NetworkAutoRefresh.AUTO_RESCAN_LAST_SCAN,0)+" busy="+com.archos.mediaprovider.video.NetworkScannerServiceVideo.isScannerAlive());
+        boolean due=previewScanOnReturn&&NetworkAutoRefresh.autoRescanAtStart(CustomApplication.this)||period>0&&now-prefs.getLong(NetworkAutoRefresh.AUTO_RESCAN_LAST_SCAN,0)>=period;
+        if(due&&(NetworkState.isLocalNetworkConnectedOrVpnMobileEnabled(CustomApplication.this)||NetworkState.isNetworkConnected(CustomApplication.this))&&!com.archos.mediaprovider.video.NetworkScannerServiceVideo.isScannerAlive()&&com.archos.mediascraper.AutoScrapeService.getNetworkScanCount()==0&&(previewRefreshAt==0||android.os.SystemClock.elapsedRealtime()-previewRefreshAt>=60000)){
+            previewRefreshAt=android.os.SystemClock.elapsedRealtime();previewRefreshRequestedWallTime=now;android.util.Log.i("SupernovaScan","Requesting configured automatic indexed-source scan");NetworkAutoRefresh.forceRescan(CustomApplication.this);
+        }
+        // Retry after an offline/busy launch and honour the existing periodic schedule while open.
+        if(previewScanOnReturn||period>0)previewRefreshHandler.postDelayed(this,30000);
+    }};
+    private void requestPreviewNetworkRefresh(){if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("try_new_ui",false))return;previewScanOnReturn=NetworkAutoRefresh.autoRescanAtStart(this);previewRefreshRequestedWallTime=0;previewRefreshHandler.removeCallbacks(previewRefresh);previewRefreshHandler.postDelayed(previewRefresh,1500);}
 
     private void addNetworkListener() {
         if (networkState == null) networkState = NetworkState.instance(mContext);

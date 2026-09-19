@@ -202,6 +202,9 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         private int lastKnownPositionMs = LAST_POSITION_UNKNOWN;
         private boolean completed;
         private boolean startPositionApplied;
+        private long viewedMs, sampleTime;
+        private int samplePosition=-1;
+        private boolean seeking, hasPlayed, failed;
 
         private void reset(Uri newUri, String newLaunchGeneration) {
             uri = newUri;
@@ -213,6 +216,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
             lastKnownPositionMs = LAST_POSITION_UNKNOWN;
             completed = false;
             startPositionApplied = false;
+            viewedMs=0;sampleTime=0;samplePosition=-1;seeking=false;hasPlayed=false;failed=false;
         }
 
         private void setCandidate(ResumeSource source, int positionMs) {
@@ -244,7 +248,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         }
     }
 
-    private static final boolean PERIODIC_BOOKMARK_SAVE = false;
+    private static final boolean PERIODIC_BOOKMARK_SAVE = true;
 
     public static final String PLAY_INTENT = "playerservice.play";
     public static final String PAUSE_INTENT = "playerservice.pause";
@@ -525,8 +529,8 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
             mAutoSaveTask = new Runnable() {
                 @Override
                 public void run() {
-                    saveVideoStateIfReady();
-                    mHandler.postDelayed(mAutoSaveTask, AUTO_SAVE_INTERVAL);
+                    if(mPlayerState==PlayerState.PLAYING)saveVideoStateIfReady(true);
+                    if(!mDestroyed)mHandler.postDelayed(mAutoSaveTask, AUTO_SAVE_INTERVAL);
                 }
             };
         }
@@ -538,6 +542,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         mAutoSkipTask = new Runnable() {
             @Override
             public void run() {
+                sampleJourneyTime();
                 autoSkipIfNeeded();
                 mHandler.postDelayed(mAutoSkipTask, AUTO_SKIP_INTERVAL);
             }
@@ -1089,7 +1094,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
 
     private int captureCurrentPosition(boolean rewindForResume) {
         int position = mPlaybackSession.lastKnownPositionMs;
-        boolean capturedFromPlayer = mPlayer != null && mPlayer.isInPlaybackState();
+        boolean capturedFromPlayer = !mPlaybackSession.failed && mPlayer != null && mPlayer.isInPlaybackState();
         if (capturedFromPlayer) {
             position = mPlayer.getDuration() != 0
                     ? mPlayer.getCurrentPosition()
@@ -1146,7 +1151,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
 
     public void persistVideoInfoFromFrontend(VideoDbInfo videoInfo) {
         if (videoInfo == null || mIndexHelper == null) return;
-        if (Objects.equals(mPlaybackSession.uri, videoInfo.uri)) {
+        if (Objects.equals(mPlaybackSession.uri, videoInfo.uri) && mPlaybackSession.startPositionApplied && mPlaybackSession.hasPlayed) {
             int position = mPlaybackSession.completed
                     ? LAST_POSITION_END
                     : captureCurrentPosition(mPlayer != null && !mPlayer.isPaused());
@@ -1155,9 +1160,19 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         mIndexHelper.writeVideoInfo(videoInfo, mNetworkBookmarksEnabled);
     }
 
-    public void saveVideoStateIfReady(){
+    private void sampleJourneyTime(){
+        if(mPlayer==null||!mPlaybackSession.startPositionApplied)return;
+        long now=android.os.SystemClock.elapsedRealtime();int position=captureCurrentPosition(false);
+        if(mPlayerState==PlayerState.PLAYING&&!mPlaybackSession.seeking&&mPlaybackSession.sampleTime>0){long elapsed=now-mPlaybackSession.sampleTime;long advanced=(long)position-mPlaybackSession.samplePosition;
+            if(elapsed>0&&elapsed<=5000&&advanced>0&&advanced<=elapsed*8+1000)mPlaybackSession.viewedMs+=elapsed;
+        }
+        mPlaybackSession.sampleTime=now;mPlaybackSession.samplePosition=position;
+    }
+    public void saveVideoStateIfReady(){saveVideoStateIfReady(false);}
+    private void saveVideoStateIfReady(boolean periodic){
         if(mIndexHelper!=null) {
-            if ((mPlayerState != PlayerState.INIT && mPlayerState != PlayerState.PREPARING)) {// if it has really been played at least once, otherwise it would overwrite lastresume with 0
+            if (mPlaybackSession.startPositionApplied && mPlaybackSession.hasPlayed && mPlayerState != PlayerState.INIT && mPlayerState != PlayerState.PREPARING) {
+                sampleJourneyTime();
                 if (log.isDebugEnabled()) log.debug("saveVideoStateIfReady");
                 int resumePosition = mPlaybackSession.completed
                         ? LAST_POSITION_END
@@ -1166,7 +1181,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
                         mPlaybackSession.selectedSource, resumePosition, mPlaybackSession.completed);
                 if (mVideoInfo != null && !PrivateMode.isActive()) {
                     mVideoInfo.resume = resumePosition;
-                    int duration = mPlayer.getDuration();
+                    int duration = mPlayer==null?0:mPlayer.getDuration();
                     if (duration > 0)
                         mVideoInfo.duration = duration;
                     long utcSeconds = System.currentTimeMillis() / 1000L;
@@ -1181,12 +1196,13 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
                     // saving seconds since the Unix epoch (January 1, 1970, 00:00:00 UTC) and this value is in UTC
                     // traktResume is set to -resume unless synced
                     mVideoInfo.lastTimePlayed = utcSeconds;
+                    com.archos.mediacenter.video.leanback.PreviewSeriesJourney.record(this,mVideoInfo,mPlaybackSession.completed,mPlaybackSession.viewedMs);
                     log.info("saveVideoStateIfReady: save bookmark at {} for videoId {}", mVideoInfo.lastTimePlayed, mVideoInfo.id);
-                    mIndexHelper.writeVideoInfo(mVideoInfo, mNetworkBookmarksEnabled);
+                    mIndexHelper.writeVideoInfo(mVideoInfo, !periodic && mNetworkBookmarksEnabled);
                     // disable periodic trakt save this should be done with pauseTrakt() anyway
                     //stopTrakt(); //this writes mVideoInfo.traktResume
                     // BootupRecommendationService is for before Android O otherwise TV channels are used
-                    if (ArchosFeatures.isAndroidTV(this))
+                    if (!periodic && ArchosFeatures.isAndroidTV(this))
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                             Intent intent = new Intent(BootupRecommandationService.UPDATE_ACTION);
                             intent.setPackage(ArchosUtils.getGlobalContext().getPackageName());
@@ -1594,6 +1610,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         if(mIndexHelper!=null)
             mIndexHelper.abort();
         mDestroyed = true;
+        if(mAutoSaveTask!=null)mHandler.removeCallbacks(mAutoSaveTask);
         if (log.isDebugEnabled()) log.debug("onDestroy: unregister headsetPluggedReceiver");
         unregisterReceiver(headsetPluggedReceiver);
         sPlayerService=null;
@@ -1656,8 +1673,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
             if (log.isDebugEnabled()) log.debug("postPreparedAndVideoDb: mPlayerFrontend.onPrepared, setPlaMode {}", mPlayMode);
             setPlayMode(mPlayMode, false); //look for next uri
             setAudioFilt();
-            if (PERIODIC_BOOKMARK_SAVE)
-                mHandler.postDelayed(mAutoSaveTask, AUTO_SAVE_INTERVAL);
+            if (PERIODIC_BOOKMARK_SAVE){mHandler.removeCallbacks(mAutoSaveTask);mHandler.postDelayed(mAutoSaveTask, AUTO_SAVE_INTERVAL);}
             fetchIntroDbIfNeeded();
             mHandler.removeCallbacks(mAutoSkipTask);
             mHandler.postDelayed(mAutoSkipTask, AUTO_SKIP_INTERVAL);
@@ -1738,7 +1754,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
 
     /** Fused intro/outro segments for the current video, or null if not available yet. */
     public IntroSegments getIntroSegments() {
-        return mIntroSegments;
+        return java.util.Objects.equals(mUri,mIntroDbFetchedUri)?mIntroSegments:null;
     }
 
     /**
@@ -1777,6 +1793,8 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         int duration = Player.sPlayer.getDuration();
         IntroSegments.Skip skip = segments.findSkip(position, duration, introEnabled, recapEnabled);
         if (skip == null) return;
+        // Up Next owns the decision to leave the credits; Cancel must keep the current file.
+        if(mPreferences.getBoolean("try_new_ui",false)&&mPlayMode==PLAYMODE_BINGE&&(skip.type==IntroSegments.Type.OUTRO||skip.type==IntroSegments.Type.CREDITS)&&previewAdjacentEpisode(1)!=null)return;
         long targetMs = Math.max(0, skip.endMs - AUTO_SKIP_BUFFER_MS);
         if (targetMs <= position) return;
         // don't re-skip the same segment if the user deliberately seeks back into it
@@ -1855,14 +1873,15 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
      * save video state and look for the next video to play
      */
     @Override
-    public void onCompletion() {
+    public void onCompletion() { advancePlayback(true); }
+    private void advancePlayback(boolean completed) {
         if (log.isDebugEnabled()) log.debug("onCompletion");
         mPlayerState = PlayerState.STOPPED;
 
         if (ArchosFeatures.isAndroidTV(this) && !PrivateMode.isActive()) {
             updateNowPlayingState();
         }
-        mPlaybackSession.completed = true;
+        mPlaybackSession.completed = completed;
         if (mNextUri != null) {
             if (log.isDebugEnabled()) log.debug("onCompletion: we have a new video {}", mNextUri);
             stopAndSaveVideoState();
@@ -1879,6 +1898,9 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
             // delayed checkpoint from the completed item cannot reattach to the new session.
             mIntent.putExtra(LAUNCH_GENERATION, UUID.randomUUID().toString());
             mVideoId = mNextVideoId;
+            // onStart reads the intent ID, so rotate both identity and metadata with the URI.
+            mIntent.putExtra("id",(int)mVideoId);mIntent.removeExtra(VIDEO);
+            com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Snapshot library=com.archos.mediacenter.video.leanback.PreviewLibraryLoader.memoryCache();if(library!=null)for(com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Entry e:library.episodes)if(((Video)e.media).getId()==mVideoId){mIntent.putExtra(VIDEO,e.media);break;}
             mNextUri = null;
             mNextVideoId = -1;
             // Repeat-single legitimately starts the same URI, but it is still a new playback.
@@ -1895,9 +1917,23 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
         }
     }
 
+    public com.archos.mediacenter.video.browser.adapters.object.Episode previewAdjacentEpisode(int direction){
+        if(mVideoInfo==null||!mVideoInfo.isShow)return null;
+        com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Snapshot snapshot=com.archos.mediacenter.video.leanback.PreviewLibraryLoader.memoryCache();if(snapshot==null)return null;
+        java.util.List<com.archos.mediacenter.video.browser.adapters.object.Episode> episodes=new java.util.ArrayList<>();long show=0;
+        for(com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Entry e:snapshot.episodes)if(((Video)e.media).getId()==mVideoInfo.id){show=e.show;break;}if(show==0)return null;
+        for(com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Entry e:snapshot.episodes)if(e.show==show)episodes.add((com.archos.mediacenter.video.browser.adapters.object.Episode)e.media);
+        episodes.sort(java.util.Comparator.comparingInt(com.archos.mediacenter.video.browser.adapters.object.Episode::getSeasonNumber).thenComparingInt(com.archos.mediacenter.video.browser.adapters.object.Episode::getEpisodeNumber));
+        for(int i=0;i<episodes.size();i++)if(episodes.get(i).getId()==mVideoInfo.id){int next=i+direction;return next>=0&&next<episodes.size()?episodes.get(next):null;}return null;
+    }
+    public void previewNavigateEpisode(int direction){com.archos.mediacenter.video.browser.adapters.object.Episode next=previewAdjacentEpisode(direction);if(next==null)return;mNextUri=next.getUri();mNextVideoId=next.getId();advancePlayback(false);}
+    public boolean previewAutoNextEnabled(){return mPlayMode==PLAYMODE_BINGE&&mNextUri!=null;}
+    public void previewCancelAutoNext(){mNextUri=null;mNextVideoId=-1;}
     @Override
     public boolean onError(int errorCode, int errorQualCode, String msg) {
-        if (log.isDebugEnabled()) log.debug("onError");
+        log.warn("Playback failure code={} qualifier={} source={} lastPosition={} duration={} state={}",errorCode,errorQualCode,mPlaybackSession.selectedSource,mPlaybackSession.lastKnownPositionMs,mVideoInfo==null?0:mVideoInfo.duration,mPlayerState);
+        mPlaybackSession.failed=true;
+        saveVideoStateIfReady();
         mPlayerState = PlayerState.STOPPED;
         if (ArchosFeatures.isAndroidTV(this) && !PrivateMode.isActive()) {
             updateNowPlayingState();
@@ -1910,6 +1946,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
 
     @Override
     public void onSeekStart(int pos) {
+        sampleJourneyTime();mPlaybackSession.seeking=true;
         if(mPlayerFrontend!=null) {
             mPlayerFrontend.onSeekStart(pos);
         }
@@ -1924,6 +1961,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
 
     @Override
     public void onAllSeekComplete() {
+        mPlaybackSession.seeking=false;mPlaybackSession.sampleTime=0;sampleJourneyTime();
         if(mPlayerFrontend!=null) {
             mPlayerFrontend.onAllSeekComplete();
         }
@@ -1933,6 +1971,8 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
     public void onPlay(int state) {
         if (log.isDebugEnabled()) log.debug("onPlay");
         mPlayerState = PlayerState.PLAYING;
+        mPlaybackSession.hasPlayed=true;mPlaybackSession.failed=false;
+        if(mVideoInfo!=null&&!PrivateMode.isActive()){android.content.SharedPreferences.Editor edit=mPreferences.edit();if(!mVideoInfo.isShow)edit.remove("preview_cw_dismiss:v"+mVideoInfo.id);else{com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Snapshot library=com.archos.mediacenter.video.leanback.PreviewLibraryLoader.memoryCache();if(library!=null)for(com.archos.mediacenter.video.leanback.PreviewLibraryLoader.Entry e:library.episodes)if(((Video)e.media).getId()==mVideoInfo.id){edit.remove("preview_cw_dismiss:"+e.key());break;}}edit.apply();}mPlaybackSession.sampleTime=0;sampleJourneyTime();
         if (state == PlayerController.STATE_NORMAL) {
             if (log.isDebugEnabled()) log.debug("onPlay: PlayerController.STATE_NORMAL -> startTrakt()");
             startTrakt();
@@ -1950,7 +1990,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
     @Override
     public void onPause(int state) {
         if (log.isDebugEnabled()) log.debug("onPause");
-        mPlayerState = PlayerState.PAUSED;
+        sampleJourneyTime();mPlayerState = PlayerState.PAUSED;
         // pauseTrakt() must run before saveVideoStateIfReady() so that it sets
         // mVideoInfo.traktResume = -progress synchronously before the async DB write captures it
         if (state == PlayerController.STATE_NORMAL) {
@@ -1970,6 +2010,7 @@ public class PlayerService extends Service implements Player.Listener, IndexHelp
 
     @Override
     public void onOSDUpdate() {
+        sampleJourneyTime();
         if(mPlayerFrontend!=null) {
             mPlayerFrontend.onOSDUpdate();
         }

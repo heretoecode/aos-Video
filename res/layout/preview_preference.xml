@@ -1,0 +1,8 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="14dp" android:paddingEnd="14dp" android:paddingTop="7dp" android:paddingBottom="7dp" android:descendantFocusability="blocksDescendants">
+ <ImageView android:id="@android:id/icon" android:layout_width="23dp" android:layout_height="23dp" android:layout_marginEnd="10dp" android:scaleType="fitCenter"/>
+ <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+  <TextView android:id="@android:id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="12sp" android:textColor="#FFFFFF" android:maxLines="2" android:ellipsize="end" android:includeFontPadding="false"/>
+  <TextView android:id="@android:id/summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="10sp" android:textColor="#AAC1D1" android:maxLines="2" android:ellipsize="end" android:includeFontPadding="false"/>
+ </LinearLayout>
+ <LinearLayout android:id="@android:id/widget_frame" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="7dp" android:orientation="vertical" android:gravity="center"/>
+</LinearLayout>

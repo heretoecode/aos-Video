@@ -197,10 +197,7 @@ public class SeasonFragment extends BrowseSupportFragment implements LoaderManag
                     else if (mActionId == TvshowActionAdapter.ACTION_DELETE) {
                         SeasonPresenter.VideoViewHolder vh = (SeasonPresenter.VideoViewHolder)itemViewHolder;
 
-                        if (!vh.getConfirmDelete()) {
-                            vh.enableConfirmDelete();
-                        }
-                        else {
+                        Runnable executeDelete=()->{
                             ArrayList<Uri> uris = new ArrayList<Uri>();
     
                             for (int i = 1; i < mSeasonsAdapter.size(); i++) {
@@ -222,7 +219,9 @@ public class SeasonFragment extends BrowseSupportFragment implements LoaderManag
                                 deleteOperation = Delete.OP_MULTIPLE_FILES;
                                 delete.startMultipleDeleteProcess(uris);
                             }
-                        }
+                        };
+                        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))com.archos.mediacenter.video.leanback.PreviewDialog.confirmDelete(requireContext(),"Delete episodes?","This permanently deletes the selected episode files from their storage. This cannot be undone.",executeDelete);
+                        else if(!vh.getConfirmDelete())vh.enableConfirmDelete();else executeDelete.run();
                     }
 
                     return;
@@ -246,10 +245,7 @@ public class SeasonFragment extends BrowseSupportFragment implements LoaderManag
                 else if (mActionId == TvshowActionAdapter.ACTION_DELETE) {
                     SeasonPresenter.VideoViewHolder vh = (SeasonPresenter.VideoViewHolder)itemViewHolder;
 
-                    if (!vh.getConfirmDelete()) {
-                        vh.enableConfirmDelete();
-                    }
-                    else {
+                    Runnable executeDelete=()->{
                         ArrayList<Uri> uris = new ArrayList<Uri>();
 
                         for(String filePath : DbUtils.getFilePaths(getActivity(), season)) {
@@ -267,7 +263,9 @@ public class SeasonFragment extends BrowseSupportFragment implements LoaderManag
                             deleteOperation = Delete.OP_MULTIPLE_FILES;
                             delete.startMultipleDeleteProcess(uris);
                         }
-                    }
+                    };
+                        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean("try_new_ui",false))com.archos.mediacenter.video.leanback.PreviewDialog.confirmDelete(requireContext(),"Delete episodes?","This permanently deletes the selected episode files from their storage. This cannot be undone.",executeDelete);
+                        else if(!vh.getConfirmDelete())vh.enableConfirmDelete();else executeDelete.run();
                 }
             }
         };

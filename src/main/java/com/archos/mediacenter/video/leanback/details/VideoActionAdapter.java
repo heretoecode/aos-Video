@@ -15,6 +15,7 @@
 package com.archos.mediacenter.video.leanback.details;
 
 import android.content.Context;
+import com.archos.mediacenter.video.streaming.StreamingActions;
 import androidx.leanback.widget.Action;
 import androidx.leanback.widget.SparseArrayObjectAdapter;
 
@@ -78,6 +79,7 @@ public class VideoActionAdapter extends SparseArrayObjectAdapter {
     }
 
     public void update(Video video, boolean inPlayer, boolean displayRemoveFromList, boolean displayConfirmDelete, Episode nextEpisode, boolean isTvEpisode){
+        StreamingActions.bind(this, mContext, video, inPlayer, 8);
         Video oldVideo = mCurrentVideo;
         mCurrentVideo = video;
         int oldRemoteResume = mCurrentRemoteResume;
@@ -106,7 +108,7 @@ public class VideoActionAdapter extends SparseArrayObjectAdapter {
                 set(ACTION_PLAY_FROM_BEGIN, new Action(ACTION_PLAY_FROM_BEGIN, mContext.getString(R.string.play_from_beginning)));
                 clear(ACTION_PLAY);
             } else{
-                set(ACTION_PLAY, new Action(ACTION_PLAY, mContext.getString(R.string.play_selection)));
+                set(ACTION_PLAY, new Action(ACTION_PLAY, mContext.getString(R.string.streaming_play_local)));
                 clear(ACTION_PLAY_FROM_BEGIN);
             }
 
@@ -245,16 +247,17 @@ public class VideoActionAdapter extends SparseArrayObjectAdapter {
             set(ACTION_PLAY_FROM_BEGIN, new Action(ACTION_PLAY_FROM_BEGIN, mContext.getString(R.string.play_from_beginning)));
             clear(ACTION_PLAY);
         } else{
-            set(ACTION_PLAY, new Action(ACTION_PLAY, mContext.getString(R.string.play_selection)));
+            set(ACTION_PLAY, new Action(ACTION_PLAY, mContext.getString(R.string.streaming_play_local)));
             clear(ACTION_PLAY_FROM_BEGIN);
         }
         notifyChanged();
     }
 
     public void updateToNonIndexed(Context context) {
+        StreamingActions.cancel(this); clear(8); clear(9);
         clear(ACTION_RESUME);
         clear(ACTION_LOCAL_RESUME);
-        set(ACTION_PLAY, new Action(ACTION_PLAY, context.getString(R.string.play_selection)));
+        set(ACTION_PLAY, new Action(ACTION_PLAY, context.getString(R.string.streaming_play_local)));
         clear(ACTION_PLAY_FROM_BEGIN);
         clear(ACTION_NEXT_EPISODE);
         clear(ACTION_LIST_EPISODES);
@@ -271,6 +274,7 @@ public class VideoActionAdapter extends SparseArrayObjectAdapter {
     }
 
     public void updateToNonScraped(Context context) {
+        StreamingActions.cancel(this); clear(8); clear(9);
         clear(ACTION_NEXT_EPISODE);
         clear(ACTION_LIST_EPISODES);
         clear(ACTION_UNSCRAP);
